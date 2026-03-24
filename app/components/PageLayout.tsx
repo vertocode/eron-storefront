@@ -44,7 +44,7 @@ export function PageLayout({children, layout}: LayoutProps) {
       <div className="flex flex-col min-h-screen">
         <div className="">
           <a href="#mainContent" className="sr-only">
-            Skip to content
+            Ir para o conteúdo
           </a>
         </div>
         {headerMenu && layout?.shop.name && (
@@ -109,7 +109,7 @@ function CartDrawer({isOpen, onClose}: {isOpen: boolean; onClose: () => void}) {
   if (!rootData) return null;
 
   return (
-    <Drawer open={isOpen} onClose={onClose} heading="Cart" openFrom="right">
+    <Drawer open={isOpen} onClose={onClose} heading="Carrinho" openFrom="right">
       <div className="grid">
         <Suspense fallback={<CartLoading />}>
           <Await resolve={rootData?.cart}>
@@ -219,7 +219,7 @@ function MobileHeader({
             }
             type="search"
             variant="minisearch"
-            placeholder="Search"
+            placeholder="Buscar"
             name="q"
           />
         </Form>
@@ -304,7 +304,7 @@ function DesktopHeader({
             }
             type="search"
             variant="minisearch"
-            placeholder="Search"
+            placeholder="Buscar"
             name="q"
           />
           <button
@@ -428,8 +428,8 @@ function Footer({menu}: {menu?: EnhancedMenu}) {
       <div
         className={`self-end pt-8 opacity-50 md:col-span-2 lg:col-span-${itemsCount}`}
       >
-        &copy; {new Date().getFullYear()} / Shopify, Inc. Hydrogen is an MIT
-        Licensed Open Source project.
+        &copy; {new Date().getFullYear()} / Shopify, Inc. Hydrogen é um projeto
+        Open Source licenciado sob MIT.
       </div>
     </Section>
   );

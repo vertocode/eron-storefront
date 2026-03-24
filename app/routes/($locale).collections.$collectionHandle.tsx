@@ -115,7 +115,7 @@ export async function loader({params, request, context}: LoaderFunctionArgs) {
         const max = input.price?.max
           ? parseAsCurrency(input.price.max, locale)
           : '';
-        const label = min && max ? `${min} - ${max}` : 'Price';
+        const label = min && max ? `${min} - ${max}` : 'Preço';
 
         return {
           filter,
@@ -179,7 +179,7 @@ export default function Collection() {
               <>
                 <div className="flex items-center justify-center mb-6">
                   <Button as={PreviousLink} variant="secondary" width="full">
-                    {isLoading ? 'Loading...' : 'Load previous'}
+                    {isLoading ? 'Carregando...' : 'Carregar anteriores'}
                   </Button>
                 </div>
                 <ProductsLoadedOnScroll
@@ -196,7 +196,7 @@ export default function Collection() {
                     variant="secondary"
                     width="full"
                   >
-                    {isLoading ? 'Loading...' : 'Load more products'}
+                    {isLoading ? 'Carregando...' : 'Carregar mais produtos'}
                   </Button>
                 </div>
               </>

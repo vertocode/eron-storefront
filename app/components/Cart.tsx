@@ -92,7 +92,7 @@ function CartDiscounts({
       {/* Have existing discount, display it with a remove option */}
       <dl className={codes && codes.length !== 0 ? 'grid' : 'hidden'}>
         <div className="flex items-center justify-between font-medium">
-          <Text as="dt">Discount(s)</Text>
+          <Text as="dt">Desconto(s)</Text>
           <div className="flex items-center justify-between">
             <UpdateDiscountForm>
               <button>
@@ -119,10 +119,10 @@ function CartDiscounts({
             className={getInputStyleClasses()}
             type="text"
             name="discountCode"
-            placeholder="Discount code"
+            placeholder="Código de desconto"
           />
           <button className="flex justify-end font-medium whitespace-nowrap">
-            Apply Discount
+            Aplicar Desconto
           </button>
         </div>
       </UpdateDiscountForm>
@@ -190,7 +190,7 @@ function CartCheckoutActions({checkoutUrl}: {checkoutUrl: string}) {
     <div className="flex flex-col mt-2">
       <a href={checkoutUrl} target="_self">
         <Button as="span" width="full">
-          Continue to Checkout
+          Continuar para o Pagamento
         </Button>
       </a>
       {/* @todo: <CartShopPayButton cart={cart} /> */}
@@ -215,7 +215,7 @@ function CartSummary({
   return (
     <section aria-labelledby="summary-heading" className={summary[layout]}>
       <h2 id="summary-heading" className="sr-only">
-        Order summary
+        Resumo do pedido
       </h2>
       <dl className="grid">
         <div className="flex items-center justify-between font-medium">
@@ -318,7 +318,7 @@ function ItemRemoveButton({lineId}: {lineId: CartLine['id']}) {
         className="flex items-center justify-center w-10 h-10 border rounded"
         type="submit"
       >
-        <span className="sr-only">Remove</span>
+        <span className="sr-only">Remover</span>
         <IconRemove aria-hidden="true" />
       </button>
       <OptimisticInput id={lineId} data={{action: 'remove'}} />
@@ -341,13 +341,13 @@ function CartLineQuantityAdjust({line}: {line: CartLine}) {
   return (
     <>
       <label htmlFor={`quantity-${lineId}`} className="sr-only">
-        Quantity, {optimisticQuantity}
+        Quantidade, {optimisticQuantity}
       </label>
       <div className="flex items-center border rounded">
         <UpdateCartButton lines={[{id: lineId, quantity: prevQuantity}]}>
           <button
             name="decrease-quantity"
-            aria-label="Decrease quantity"
+            aria-label="Diminuir quantidade"
             className="w-10 h-10 transition text-primary/50 hover:text-primary disabled:text-primary/10"
             value={prevQuantity}
             disabled={optimisticQuantity <= 1}
@@ -369,7 +369,7 @@ function CartLineQuantityAdjust({line}: {line: CartLine}) {
             className="w-10 h-10 transition text-primary/50 hover:text-primary"
             name="increase-quantity"
             value={nextQuantity}
-            aria-label="Increase quantity"
+            aria-label="Aumentar quantidade"
           >
             <span>&#43;</span>
             <OptimisticInput
@@ -453,17 +453,16 @@ export function CartEmpty({
     <div ref={scrollRef} className={container[layout]} hidden={hidden}>
       <section className="grid gap-6">
         <Text format>
-          Looks like you haven&rsquo;t added anything yet, let&rsquo;s get you
-          started!
+          Parece que você ainda não adicionou nada, vamos começar!
         </Text>
         <div>
-          <Button onClick={onClose}>Continue shopping</Button>
+          <Button onClick={onClose}>Continuar comprando</Button>
         </div>
       </section>
       <section className="grid gap-8 pt-16">
         <FeaturedProducts
           count={4}
-          heading="Shop Best Sellers"
+          heading="Mais Vendidos"
           layout={layout}
           onClose={onClose}
           sortKey="BEST_SELLING"

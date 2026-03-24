@@ -190,11 +190,11 @@ export function ErrorBoundary({error}: {error: Error}) {
   const routeError = useRouteError();
   const isRouteError = isRouteErrorResponse(routeError);
 
-  let title = 'Error';
+  let title = 'Erro';
   let pageType = 'page';
 
   if (isRouteError) {
-    title = 'Not found';
+    title = 'Não encontrado';
     if (routeError.status === 404) pageType = routeError.data || pageType;
   }
 

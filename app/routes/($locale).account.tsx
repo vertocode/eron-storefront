@@ -50,9 +50,9 @@ export async function loader({request, context, params}: LoaderFunctionArgs) {
 
   const heading = customer
     ? customer.firstName
-      ? `Welcome, ${customer.firstName}.`
-      : `Welcome to your account.`
-    : 'Account Details';
+      ? `Bem-vindo(a), ${customer.firstName}.`
+      : `Bem-vindo(a) à sua conta.`
+    : 'Detalhes da Conta';
 
   return defer(
     {
@@ -112,7 +112,7 @@ function Account({customer, heading, featuredDataPromise}: AccountType) {
       <PageHeader heading={heading}>
         <Form method="post" action={usePrefixPathWithLocale('/account/logout')}>
           <button type="submit" className="text-primary/50">
-            Sign out
+            Sair
           </button>
         </Form>
       </PageHeader>
@@ -123,12 +123,12 @@ function Account({customer, heading, featuredDataPromise}: AccountType) {
         <Suspense>
           <Await
             resolve={featuredDataPromise}
-            errorElement="There was a problem loading featured products."
+            errorElement="Houve um problema ao carregar produtos em destaque."
           >
             {(data) => (
               <>
                 <FeaturedCollections
-                  title="Popular Collections"
+                  title="Coleções Populares"
                   collections={data.featuredCollections}
                 />
                 <ProductSwimlane products={data.featuredProducts} />
@@ -149,7 +149,7 @@ function AccountOrderHistory({orders}: OrderCardsProps) {
   return (
     <div className="mt-6">
       <div className="grid w-full gap-4 p-4 py-6 md:gap-8 md:p-8 lg:p-12">
-        <h2 className="font-bold text-lead">Order History</h2>
+        <h2 className="font-bold text-lead">Histórico de Pedidos</h2>
         {orders?.length ? <Orders orders={orders} /> : <EmptyOrders />}
       </div>
     </div>
@@ -160,7 +160,7 @@ function EmptyOrders() {
   return (
     <div>
       <Text className="mb-1" size="fine" width="narrow" as="p">
-        You haven&apos;t placed any orders yet.
+        Você ainda não fez nenhum pedido.
       </Text>
       <div className="w-48">
         <Button
@@ -168,7 +168,7 @@ function EmptyOrders() {
           variant="secondary"
           to={usePrefixPathWithLocale('/')}
         >
-          Start Shopping
+          Começar a Comprar
         </Button>
       </div>
     </div>

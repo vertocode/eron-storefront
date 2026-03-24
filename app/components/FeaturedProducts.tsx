@@ -33,7 +33,7 @@ interface FeaturedProductsProps {
  */
 export function FeaturedProducts({
   count = 4,
-  heading = 'Shop Best Sellers',
+  heading = 'Mais Vendidos',
   layout = 'drawer',
   onClose,
   query,
@@ -106,7 +106,7 @@ function FeatureProductsContent({
   }
 
   if (products?.length === 0) {
-    return <Text format>No products found.</Text>;
+    return <Text format>Nenhum produto encontrado.</Text>;
   }
 
   return (

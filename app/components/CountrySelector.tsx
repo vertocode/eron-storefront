@@ -56,7 +56,7 @@ export function CountrySelector() {
       onMouseLeave={closeDropdown}
     >
       <Heading size="lead" className="cursor-default" as="h3">
-        Country
+        País
       </Heading>
       <div className="relative">
         <details

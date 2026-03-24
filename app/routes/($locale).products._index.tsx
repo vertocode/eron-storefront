@@ -43,13 +43,13 @@ export async function loader({
     url: request.url,
     collection: {
       id: 'all-products',
-      title: 'All Products',
+      title: 'Todos os Produtos',
       handle: 'products',
-      descriptionHtml: 'All the store products',
-      description: 'All the store products',
+      descriptionHtml: 'Todos os produtos da loja',
+      description: 'Todos os produtos da loja',
       seo: {
-        title: 'All Products',
-        description: 'All the store products',
+        title: 'Todos os Produtos',
+        description: 'Todos os produtos da loja',
       },
       metafields: [],
       products: data.products,
@@ -72,7 +72,7 @@ export default function AllProducts() {
 
   return (
     <>
-      <PageHeader heading="All Products" variant="allCollections" />
+      <PageHeader heading="Todos os Produtos" variant="allCollections" />
       <Section>
         <Pagination connection={products}>
           {({nodes, isLoading, NextLink, PreviousLink}) => {
@@ -88,13 +88,13 @@ export default function AllProducts() {
               <>
                 <div className="flex items-center justify-center mt-6">
                   <PreviousLink className="inline-block rounded font-medium text-center py-3 px-6 border border-primary/10 bg-contrast text-primary w-full">
-                    {isLoading ? 'Loading...' : 'Previous'}
+                    {isLoading ? 'Carregando...' : 'Anterior'}
                   </PreviousLink>
                 </div>
                 <Grid data-test="product-grid">{itemsMarkup}</Grid>
                 <div className="flex items-center justify-center mt-6">
                   <NextLink className="inline-block rounded font-medium text-center py-3 px-6 border border-primary/10 bg-contrast text-primary w-full">
-                    {isLoading ? 'Loading...' : 'Next'}
+                    {isLoading ? 'Carregando...' : 'Próximo'}
                   </NextLink>
                 </div>
               </>
