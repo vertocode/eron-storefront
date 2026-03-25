@@ -11,7 +11,7 @@ export type FeaturedProductsProps = {
 const mockProducts = new Array(4).fill('') as ProductCardFragment[];
 
 export function FeaturedProducts({
-  title = 'Featured Products',
+  title = 'Produtos em Destaque',
   count = 8,
   products = mockProducts,
 }: FeaturedProductsProps) {

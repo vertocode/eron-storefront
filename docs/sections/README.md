@@ -18,6 +18,12 @@ As seções da homepage são configuradas via **Metaobjects do Shopify**. Isso p
 | [RichText](./RichText.md)                              | `RichText`             | Bloco de texto rico                    |
 | [ImageWithText](./ImageWithText.md)                    | `ImageWithText`        | Imagem + texto em duas colunas         |
 | [Banner](./Banner.md)                                  | `Banner`               | Faixa de anúncio                       |
+| [Newsletter](./Newsletter.md)                          | `Newsletter`           | Formulário de inscrição por e-mail     |
+| [Testimonials](./Testimonials.md)                      | `Testimonials`         | Depoimentos de clientes                |
+| [VideoSection](./VideoSection.md)                      | `VideoSection`         | Vídeo embed (YouTube/Vimeo/direto)     |
+| [FAQ](./FAQ.md)                                        | `FAQ`                  | Perguntas frequentes com accordion     |
+| [CountdownTimer](./CountdownTimer.md)                  | `CountdownTimer`       | Contagem regressiva para promoções     |
+| [LogoList](./LogoList.md)                              | `LogoList`             | Lista de logos / selos de confiança    |
 
 ## Setup inicial
 

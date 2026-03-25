@@ -21,7 +21,7 @@ export type FeaturedCollectionsProps = {
 };
 
 export function FeaturedCollections({
-  title = 'Collections',
+  title = 'Coleções',
   collections = [],
 }: FeaturedCollectionsProps) {
   const withImages = collections.filter((c) => c.image);
@@ -36,7 +36,7 @@ export function FeaturedCollections({
               <div className="card-image bg-primary/5 aspect-[3/2]">
                 {collection.image && (
                   <Image
-                    alt={`Image of ${collection.title}`}
+                    alt={`Imagem de ${collection.title}`}
                     data={collection.image}
                     sizes="(max-width: 32em) 100vw, 33vw"
                     aspectRatio="3/2"
