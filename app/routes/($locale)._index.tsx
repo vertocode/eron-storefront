@@ -14,6 +14,7 @@ import {MEDIA_FRAGMENT, PRODUCT_CARD_FRAGMENT} from '~/data/fragments';
 import {getHeroPlaceholder} from '~/lib/placeholders';
 import {seoPayload} from '~/lib/seo.server';
 import {routeHeaders} from '~/data/cache';
+import {RenderSection} from '~/components/Sections';
 
 export const headers = routeHeaders;
 
@@ -129,11 +130,108 @@ function loadDeferredData({context}: LoaderFunctionArgs) {
       return null;
     });
 
+  const sections = context.storefront
+    .query(SECTIONS_QUERY, {variables: {country, language}})
+    .then(async (res) => {
+      const ids: string[] = JSON.parse(
+        res?.page?.metafield?.value || '[]',
+      );
+      if (!Array.isArray(ids) || !ids.length) return [];
+
+      const metaobjects = await Promise.all(
+        ids.map((id) =>
+          context.storefront
+            .query(
+              `#graphql
+              query SectionMetaobject($id: ID!) {
+                metaobject(id: $id) {
+                  type
+                  fields {
+                    key
+                    value
+                    reference {
+                      ... on MediaImage {
+                        ...Media
+                      }
+                    }
+                  }
+                }
+              }
+              ${MEDIA_FRAGMENT}` as const,
+              {variables: {id}},
+            )
+            .then((r) => r?.metaobject),
+        ),
+      );
+
+      return metaobjects
+        .filter(Boolean)
+        .map((obj) => ({
+          type: obj!.type,
+          ...Object.fromEntries(
+            obj!.fields.map(
+              (f: {key: string; value: string; reference?: any}) => [
+                f.key,
+                f.reference ?? f.value,
+              ],
+            ),
+          ),
+        }));
+    })
+    .then(async (sectionList) => {
+      // Resolve product IDs in FeaturedProducts sections
+      const resolved = [];
+      for (const section of sectionList) {
+        const entry = {...section} as Record<string, any>;
+        for (const key of Object.keys(entry)) {
+          try {
+            const val = JSON.parse(entry[key]);
+            if (
+              Array.isArray(val) &&
+              val.every(
+                (v) =>
+                  typeof v === 'string' &&
+                  v.includes('gid://shopify/Product/'),
+              )
+            ) {
+              const result = await context.storefront
+                .query(
+                  `#graphql
+                  ${PRODUCT_CARD_FRAGMENT}
+                  query SectionProducts($ids: [ID!]!) {
+                    nodes(ids: $ids) {
+                      ... on Product { ...ProductCard }
+                    }
+                  }` as const,
+                  {variables: {ids: val}},
+                )
+                .then((r) =>
+                  (r as any).nodes
+                    ? {nodes: (r as any).nodes.filter(Boolean)}
+                    : {nodes: []},
+                );
+              entry[key] = result.nodes;
+            }
+          } catch (_) {
+            // not JSON or not a product list — keep as-is
+          }
+        }
+        resolved.push(entry);
+      }
+      return resolved;
+    })
+    .catch((e) => {
+      // eslint-disable-next-line no-console
+      console.error('Failed to load sections:', e);
+      return [];
+    });
+
   return {
     featuredProducts,
     secondaryHero,
     featuredCollections,
     tertiaryHero,
+    sections,
   };
 }
 
@@ -148,6 +246,7 @@ export default function Homepage() {
     tertiaryHero,
     featuredCollections,
     featuredProducts,
+    sections,
   } = useLoaderData<typeof loader>();
 
   // TODO: skeletons vs placeholders
@@ -155,6 +254,20 @@ export default function Homepage() {
 
   return (
     <>
+      {/* Dynamic sections from Shopify metaobjects */}
+      {sections && (
+        <Suspense>
+          <Await resolve={sections}>
+            {(resolvedSections) =>
+              (resolvedSections as any[]).map((section, i) => (
+                <RenderSection key={`section-${i}`} {...(section as any)} />
+              ))
+            }
+          </Await>
+        </Suspense>
+      )}
+
+      {/* Existing static content below — kept as fallback */}
       {primaryHero && (
         <Hero {...primaryHero} height="full" top loading="eager" />
       )}
@@ -317,6 +430,17 @@ export const FEATURED_COLLECTIONS_QUERY = `#graphql
           height
           url
         }
+      }
+    }
+  }
+` as const;
+
+const SECTIONS_QUERY = `#graphql
+  query HomepageSections($country: CountryCode, $language: LanguageCode)
+  @inContext(country: $country, language: $language) {
+    page(handle: "homepage") {
+      metafield(namespace: "custom", key: "sections") {
+        value
       }
     }
   }
