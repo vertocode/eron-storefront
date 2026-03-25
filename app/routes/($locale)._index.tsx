@@ -173,7 +173,7 @@ export default function Homepage() {
               return (
                 <ProductSwimlane
                   products={response.products}
-                  title="Featured Products"
+                  title="Produtos em Destaque"
                   count={4}
                 />
               );
@@ -209,7 +209,7 @@ export default function Homepage() {
               return (
                 <FeaturedCollections
                   collections={response.collections}
-                  title="Collections"
+                  title="Coleções"
                 />
               );
             }}

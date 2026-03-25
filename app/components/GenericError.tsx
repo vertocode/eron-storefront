@@ -7,8 +7,8 @@ export function GenericError({
 }: {
   error?: {message: string; stack?: string};
 }) {
-  const heading = `Something’s wrong here.`;
-  let description = `We found an error while loading this page.`;
+  const heading = `Algo deu errado.`;
+  let description = `Encontramos um erro ao carregar esta página.`;
 
   // TODO hide error in prod?
   if (error) {
@@ -38,7 +38,7 @@ export function GenericError({
           />
         )}
         <Button width="auto" variant="secondary" to={'/'}>
-          Take me to the home page
+          Ir para a página inicial
         </Button>
       </PageHeader>
       <FeaturedSection />

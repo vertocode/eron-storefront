@@ -80,7 +80,7 @@ export function Drawer({
                       onClick={onClose}
                       data-test="close-cart"
                     >
-                      <IconClose aria-label="Close panel" />
+                      <IconClose aria-label="Fechar painel" />
                     </button>
                   </header>
                   {children}

@@ -109,7 +109,7 @@ export default function AccountDetailsEdit() {
   return (
     <>
       <Text className="mt-4 mb-6" as="h3" size="lead">
-        Update your profile
+        Atualize seu perfil
       </Text>
       <Form method="post">
         {actionData?.formError && (
@@ -124,8 +124,8 @@ export default function AccountDetailsEdit() {
             name="firstName"
             type="text"
             autoComplete="given-name"
-            placeholder="First name"
-            aria-label="First name"
+            placeholder="Nome"
+            aria-label="Nome"
             defaultValue={customer.firstName ?? ''}
           />
         </div>
@@ -136,8 +136,8 @@ export default function AccountDetailsEdit() {
             name="lastName"
             type="text"
             autoComplete="family-name"
-            placeholder="Last name"
-            aria-label="Last name"
+            placeholder="Sobrenome"
+            aria-label="Sobrenome"
             defaultValue={customer.lastName ?? ''}
           />
         </div>
@@ -149,12 +149,12 @@ export default function AccountDetailsEdit() {
             type="submit"
             disabled={state !== 'idle'}
           >
-            {state !== 'idle' ? 'Saving' : 'Save'}
+            {state !== 'idle' ? 'Salvando' : 'Salvar'}
           </Button>
         </div>
         <div className="mb-4">
           <Button to=".." className="text-sm" variant="secondary" width="full">
-            Cancel
+            Cancelar
           </Button>
         </div>
       </Form>
