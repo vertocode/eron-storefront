@@ -22,7 +22,7 @@ export function FAQ({
 }: FAQProps) {
   let faqItems: FAQItem[] = [];
   try {
-    faqItems = items ? JSON.parse(items) : [];
+    faqItems = items ? (JSON.parse(items) as FAQItem[]) : [];
   } catch {
     return null;
   }
