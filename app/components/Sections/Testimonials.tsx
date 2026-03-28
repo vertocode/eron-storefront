@@ -21,7 +21,7 @@ export function Testimonials({
 }: TestimonialsProps) {
   let items: Testimonial[] = [];
   try {
-    items = testimonials ? JSON.parse(testimonials) : [];
+    items = testimonials ? (JSON.parse(testimonials) as Testimonial[]) : [];
   } catch {
     return null;
   }

@@ -133,87 +133,76 @@ function loadDeferredData({context}: LoaderFunctionArgs) {
   const sections = context.storefront
     .query(SECTIONS_QUERY, {variables: {country, language}})
     .then(async (res) => {
-      const ids: string[] = JSON.parse(
-        res?.page?.metafield?.value || '[]',
-      );
-      if (!Array.isArray(ids) || !ids.length) return [];
+      const refs = res?.page?.metafield?.references?.nodes;
+      if (!Array.isArray(refs) || !refs.length) return [];
 
-      const metaobjects = await Promise.all(
-        ids.map((id) =>
-          context.storefront
-            .query(
-              `#graphql
-              query SectionMetaobject($id: ID!) {
-                metaobject(id: $id) {
-                  type
-                  fields {
-                    key
-                    value
-                    reference {
-                      ... on MediaImage {
-                        ...Media
-                      }
-                    }
-                  }
-                }
-              }
-              ${MEDIA_FRAGMENT}` as const,
-              {variables: {id}},
-            )
-            .then((r) => r?.metaobject),
-        ),
-      );
+      // Map from metaobject type to section component type
+      const typeMap: Record<string, string> = {
+        section_hero_banner: 'HeroBanner',
+        section_feature_products: 'FeaturedProducts',
+        featuredcollections: 'FeaturedCollections',
+        newsletter: 'Newsletter',
+        testimonials: 'Testimonials',
+        videosection: 'VideoSection',
+        faq: 'FAQ',
+        countdowntimer: 'CountdownTimer',
+        logolist: 'LogoList',
+        // Direct matches (lowercase metaobject types)
+        herobanner: 'HeroBanner',
+        featuredproducts: 'FeaturedProducts',
+        richtext: 'RichText',
+        imagewithtext: 'ImageWithText',
+        banner: 'Banner',
+      };
 
-      return metaobjects
-        .filter(Boolean)
-        .map((obj) => ({
-          type: obj!.type,
-          ...Object.fromEntries(
-            obj!.fields.map(
-              (f: {key: string; value: string; reference?: any}) => [
-                f.key,
-                f.reference ?? f.value,
-              ],
-            ),
-          ),
-        }));
-    })
-    .then(async (sectionList) => {
-      // Resolve product IDs in FeaturedProducts sections
+      const sectionList = refs.filter(Boolean).map((obj: any) => {
+        const fields = Object.fromEntries(
+          obj.fields.map((f: {key: string; value: string; reference?: any; references?: {nodes?: any[]}}) => {
+            if (f.references?.nodes?.length) {
+              return [f.key, f.references.nodes];
+            }
+            if (f.reference) {
+              return [f.key, f.reference];
+            }
+            return [f.key, f.value];
+          }),
+        );
+
+        // Use the "type" text field if present, otherwise map from metaobject type
+        const sectionType = fields.type || typeMap[obj.type] || obj.type;
+        delete fields.type;
+        delete fields.display_name;
+
+        return {type: sectionType, ...fields};
+      });
+
+      // Resolve GID arrays (products and collections) into full data
       const resolved = [];
       for (const section of sectionList) {
         const entry = {...section} as Record<string, any>;
         for (const key of Object.keys(entry)) {
+          if (typeof entry[key] !== 'string') continue;
           try {
             const val = JSON.parse(entry[key]);
-            if (
-              Array.isArray(val) &&
-              val.every(
-                (v) =>
-                  typeof v === 'string' &&
-                  v.includes('gid://shopify/Product/'),
-              )
-            ) {
-              const result = await context.storefront
-                .query(
-                  `#graphql
-                  ${PRODUCT_CARD_FRAGMENT}
-                  query SectionProducts($ids: [ID!]!) {
-                    nodes(ids: $ids) {
-                      ... on Product { ...ProductCard }
-                    }
-                  }` as const,
-                  {variables: {ids: val}},
-                )
-                .then((r) =>
-                  (r as any).nodes
-                    ? {nodes: (r as any).nodes.filter(Boolean)}
-                    : {nodes: []},
-                );
-              entry[key] = result.nodes;
+            if (!Array.isArray(val) || !val.length) continue;
+            if (!val.every((v: unknown) => typeof v === 'string' && (v as string).startsWith('gid://shopify/'))) continue;
+
+            const firstGid = val[0] as string;
+            if (firstGid.includes('/Product/')) {
+              const result = await context.storefront.query(
+                SECTION_PRODUCTS_QUERY,
+                {variables: {ids: val as string[]}},
+              );
+              entry[key] = (result as any).nodes?.filter(Boolean) ?? [];
+            } else if (firstGid.includes('/Collection/')) {
+              const result = await context.storefront.query(
+                SECTION_COLLECTIONS_QUERY,
+                {variables: {ids: val as string[]}},
+              );
+              entry[key] = (result as any).nodes?.filter(Boolean) ?? [];
             }
-          } catch (_) {
-            // not JSON or not a product list — keep as-is
+          } catch {
+            // not JSON or not a GID list — keep as-is
           }
         }
         resolved.push(entry);
@@ -258,16 +247,53 @@ export default function Homepage() {
       {sections && (
         <Suspense>
           <Await resolve={sections}>
-            {(resolvedSections) =>
-              (resolvedSections as any[]).map((section, i) => (
-                <RenderSection key={`section-${i}`} {...(section as any)} />
-              ))
-            }
+            {(resolvedSections) => {
+              const sectionArray = resolvedSections as any[];
+              if (sectionArray?.length > 0) {
+                return sectionArray.map((section, i) => (
+                  <RenderSection key={`section-${i}`} {...(section as any)} />
+                ));
+              }
+              // Fallback: show static content when no dynamic sections are configured
+              return (
+                <StaticHomepageContent
+                  primaryHero={primaryHero}
+                  featuredProducts={featuredProducts}
+                  secondaryHero={secondaryHero}
+                  featuredCollections={featuredCollections}
+                  tertiaryHero={tertiaryHero}
+                  skeletons={skeletons}
+                />
+              );
+            }}
           </Await>
         </Suspense>
       )}
+      {/* Fallback when sections promise is not available */}
+      {!sections && (
+        <StaticHomepageContent
+          primaryHero={primaryHero}
+          featuredProducts={featuredProducts}
+          secondaryHero={secondaryHero}
+          featuredCollections={featuredCollections}
+          tertiaryHero={tertiaryHero}
+          skeletons={skeletons}
+        />
+      )}
+    </>
+  );
+}
 
-      {/* Existing static content below — kept as fallback */}
+function StaticHomepageContent({
+  primaryHero,
+  featuredProducts,
+  secondaryHero,
+  featuredCollections,
+  tertiaryHero,
+  skeletons,
+}: any) {
+  return (
+    <>
       {primaryHero && (
         <Hero {...primaryHero} height="full" top loading="eager" />
       )}
@@ -275,14 +301,8 @@ export default function Homepage() {
       {featuredProducts && (
         <Suspense>
           <Await resolve={featuredProducts}>
-            {(response) => {
-              if (
-                !response ||
-                !response?.products ||
-                !response?.products?.nodes
-              ) {
-                return <></>;
-              }
+            {(response: any) => {
+              if (!response?.products?.nodes) return <></>;
               return (
                 <ProductSwimlane
                   products={response.products}
@@ -298,10 +318,8 @@ export default function Homepage() {
       {secondaryHero && (
         <Suspense fallback={<Hero {...skeletons[1]} />}>
           <Await resolve={secondaryHero}>
-            {(response) => {
-              if (!response || !response?.hero) {
-                return <></>;
-              }
+            {(response: any) => {
+              if (!response?.hero) return <></>;
               return <Hero {...response.hero} />;
             }}
           </Await>
@@ -311,14 +329,8 @@ export default function Homepage() {
       {featuredCollections && (
         <Suspense>
           <Await resolve={featuredCollections}>
-            {(response) => {
-              if (
-                !response ||
-                !response?.collections ||
-                !response?.collections?.nodes
-              ) {
-                return <></>;
-              }
+            {(response: any) => {
+              if (!response?.collections?.nodes) return <></>;
               return (
                 <FeaturedCollections
                   collections={response.collections}
@@ -333,10 +345,8 @@ export default function Homepage() {
       {tertiaryHero && (
         <Suspense fallback={<Hero {...skeletons[2]} />}>
           <Await resolve={tertiaryHero}>
-            {(response) => {
-              if (!response || !response?.hero) {
-                return <></>;
-              }
+            {(response: any) => {
+              if (!response?.hero) return <></>;
               return <Hero {...response.hero} />;
             }}
           </Await>
@@ -440,7 +450,83 @@ const SECTIONS_QUERY = `#graphql
   @inContext(country: $country, language: $language) {
     page(handle: "homepage") {
       metafield(namespace: "custom", key: "sections") {
-        value
+        references(first: 20) {
+          nodes {
+            ... on Metaobject {
+              type
+              fields {
+                key
+                value
+                reference {
+                  ... on MediaImage {
+                    ...Media
+                  }
+                  ... on Collection {
+                    id
+                    title
+                    handle
+                    image {
+                      altText
+                      width
+                      height
+                      url
+                    }
+                  }
+                }
+                references(first: 10) {
+                  nodes {
+                    ... on Product {
+                      ...ProductCard
+                    }
+                    ... on Collection {
+                      id
+                      title
+                      handle
+                      image {
+                        altText
+                        width
+                        height
+                        url
+                      }
+                    }
+                    ... on MediaImage {
+                      ...Media
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  ${MEDIA_FRAGMENT}
+  ${PRODUCT_CARD_FRAGMENT}
+` as const;
+
+const SECTION_PRODUCTS_QUERY = `#graphql
+  query SectionProducts($ids: [ID!]!) {
+    nodes(ids: $ids) {
+      ... on Product { ...ProductCard }
+    }
+  }
+  ${PRODUCT_CARD_FRAGMENT}
+` as const;
+
+const SECTION_COLLECTIONS_QUERY = `#graphql
+  query SectionCollections($ids: [ID!]!) {
+    nodes(ids: $ids) {
+      ... on Collection {
+        id
+        title
+        handle
+        image {
+          altText
+          width
+          height
+          url
+        }
       }
     }
   }

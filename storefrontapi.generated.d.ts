@@ -519,6 +519,180 @@ export type HomepageFeaturedCollectionsQuery = {
   };
 };
 
+export type HomepageSectionsQueryVariables = StorefrontAPI.Exact<{
+  country?: StorefrontAPI.InputMaybe<StorefrontAPI.CountryCode>;
+  language?: StorefrontAPI.InputMaybe<StorefrontAPI.LanguageCode>;
+}>;
+
+export type HomepageSectionsQuery = {
+  page?: StorefrontAPI.Maybe<{
+    metafield?: StorefrontAPI.Maybe<{
+      references?: StorefrontAPI.Maybe<{
+        nodes: Array<
+          Pick<StorefrontAPI.Metaobject, 'type'> & {
+            fields: Array<
+              Pick<StorefrontAPI.MetaobjectField, 'key' | 'value'> & {
+                reference?: StorefrontAPI.Maybe<
+                  | (Pick<
+                      StorefrontAPI.Collection,
+                      'id' | 'title' | 'handle'
+                    > & {
+                      image?: StorefrontAPI.Maybe<
+                        Pick<
+                          StorefrontAPI.Image,
+                          'altText' | 'width' | 'height' | 'url'
+                        >
+                      >;
+                    })
+                  | ({__typename: 'MediaImage'} & Pick<
+                      StorefrontAPI.MediaImage,
+                      'id' | 'mediaContentType' | 'alt'
+                    > & {
+                        image?: StorefrontAPI.Maybe<
+                          Pick<
+                            StorefrontAPI.Image,
+                            'id' | 'url' | 'width' | 'height'
+                          >
+                        >;
+                        previewImage?: StorefrontAPI.Maybe<
+                          Pick<StorefrontAPI.Image, 'url'>
+                        >;
+                      })
+                >;
+                references?: StorefrontAPI.Maybe<{
+                  nodes: Array<
+                    | (Pick<
+                        StorefrontAPI.Collection,
+                        'id' | 'title' | 'handle'
+                      > & {
+                        image?: StorefrontAPI.Maybe<
+                          Pick<
+                            StorefrontAPI.Image,
+                            'altText' | 'width' | 'height' | 'url'
+                          >
+                        >;
+                      })
+                    | ({__typename: 'MediaImage'} & Pick<
+                        StorefrontAPI.MediaImage,
+                        'id' | 'mediaContentType' | 'alt'
+                      > & {
+                          image?: StorefrontAPI.Maybe<
+                            Pick<
+                              StorefrontAPI.Image,
+                              'id' | 'url' | 'width' | 'height'
+                            >
+                          >;
+                          previewImage?: StorefrontAPI.Maybe<
+                            Pick<StorefrontAPI.Image, 'url'>
+                          >;
+                        })
+                    | (Pick<
+                        StorefrontAPI.Product,
+                        'id' | 'title' | 'publishedAt' | 'handle' | 'vendor'
+                      > & {
+                        variants: {
+                          nodes: Array<
+                            Pick<
+                              StorefrontAPI.ProductVariant,
+                              'id' | 'availableForSale'
+                            > & {
+                              image?: StorefrontAPI.Maybe<
+                                Pick<
+                                  StorefrontAPI.Image,
+                                  'url' | 'altText' | 'width' | 'height'
+                                >
+                              >;
+                              price: Pick<
+                                StorefrontAPI.MoneyV2,
+                                'amount' | 'currencyCode'
+                              >;
+                              compareAtPrice?: StorefrontAPI.Maybe<
+                                Pick<
+                                  StorefrontAPI.MoneyV2,
+                                  'amount' | 'currencyCode'
+                                >
+                              >;
+                              selectedOptions: Array<
+                                Pick<
+                                  StorefrontAPI.SelectedOption,
+                                  'name' | 'value'
+                                >
+                              >;
+                              product: Pick<
+                                StorefrontAPI.Product,
+                                'handle' | 'title'
+                              >;
+                            }
+                          >;
+                        };
+                      })
+                  >;
+                }>;
+              }
+            >;
+          }
+        >;
+      }>;
+    }>;
+  }>;
+};
+
+export type SectionProductsQueryVariables = StorefrontAPI.Exact<{
+  ids:
+    | Array<StorefrontAPI.Scalars['ID']['input']>
+    | StorefrontAPI.Scalars['ID']['input'];
+}>;
+
+export type SectionProductsQuery = {
+  nodes: Array<
+    StorefrontAPI.Maybe<
+      Pick<
+        StorefrontAPI.Product,
+        'id' | 'title' | 'publishedAt' | 'handle' | 'vendor'
+      > & {
+        variants: {
+          nodes: Array<
+            Pick<StorefrontAPI.ProductVariant, 'id' | 'availableForSale'> & {
+              image?: StorefrontAPI.Maybe<
+                Pick<
+                  StorefrontAPI.Image,
+                  'url' | 'altText' | 'width' | 'height'
+                >
+              >;
+              price: Pick<StorefrontAPI.MoneyV2, 'amount' | 'currencyCode'>;
+              compareAtPrice?: StorefrontAPI.Maybe<
+                Pick<StorefrontAPI.MoneyV2, 'amount' | 'currencyCode'>
+              >;
+              selectedOptions: Array<
+                Pick<StorefrontAPI.SelectedOption, 'name' | 'value'>
+              >;
+              product: Pick<StorefrontAPI.Product, 'handle' | 'title'>;
+            }
+          >;
+        };
+      }
+    >
+  >;
+};
+
+export type SectionCollectionsQueryVariables = StorefrontAPI.Exact<{
+  ids:
+    | Array<StorefrontAPI.Scalars['ID']['input']>
+    | StorefrontAPI.Scalars['ID']['input'];
+}>;
+
+export type SectionCollectionsQuery = {
+  nodes: Array<
+    StorefrontAPI.Maybe<
+      Pick<StorefrontAPI.Collection, 'id' | 'title' | 'handle'> & {
+        image?: StorefrontAPI.Maybe<
+          Pick<StorefrontAPI.Image, 'altText' | 'width' | 'height' | 'url'>
+        >;
+      }
+    >
+  >;
+};
+
 export type ApiAllProductsQueryVariables = StorefrontAPI.Exact<{
   query?: StorefrontAPI.InputMaybe<StorefrontAPI.Scalars['String']['input']>;
   count?: StorefrontAPI.InputMaybe<StorefrontAPI.Scalars['Int']['input']>;
@@ -1390,6 +1564,18 @@ interface GeneratedQueryTypes {
   '#graphql\n  query homepageFeaturedCollections($country: CountryCode, $language: LanguageCode)\n  @inContext(country: $country, language: $language) {\n    collections(\n      first: 4,\n      sortKey: UPDATED_AT\n    ) {\n      nodes {\n        id\n        title\n        handle\n        image {\n          altText\n          width\n          height\n          url\n        }\n      }\n    }\n  }\n': {
     return: HomepageFeaturedCollectionsQuery;
     variables: HomepageFeaturedCollectionsQueryVariables;
+  };
+  '#graphql\n  query HomepageSections($country: CountryCode, $language: LanguageCode)\n  @inContext(country: $country, language: $language) {\n    page(handle: "homepage") {\n      metafield(namespace: "custom", key: "sections") {\n        references(first: 20) {\n          nodes {\n            ... on Metaobject {\n              type\n              fields {\n                key\n                value\n                reference {\n                  ... on MediaImage {\n                    ...Media\n                  }\n                  ... on Collection {\n                    id\n                    title\n                    handle\n                    image {\n                      altText\n                      width\n                      height\n                      url\n                    }\n                  }\n                }\n                references(first: 10) {\n                  nodes {\n                    ... on Product {\n                      ...ProductCard\n                    }\n                    ... on Collection {\n                      id\n                      title\n                      handle\n                      image {\n                        altText\n                        width\n                        height\n                        url\n                      }\n                    }\n                    ... on MediaImage {\n                      ...Media\n                    }\n                  }\n                }\n              }\n            }\n          }\n        }\n      }\n    }\n  }\n  #graphql\n  fragment Media on Media {\n    __typename\n    mediaContentType\n    alt\n    previewImage {\n      url\n    }\n    ... on MediaImage {\n      id\n      image {\n        id\n        url\n        width\n        height\n      }\n    }\n    ... on Video {\n      id\n      sources {\n        mimeType\n        url\n      }\n    }\n    ... on Model3d {\n      id\n      sources {\n        mimeType\n        url\n      }\n    }\n    ... on ExternalVideo {\n      id\n      embedUrl\n      host\n    }\n  }\n\n  #graphql\n  fragment ProductCard on Product {\n    id\n    title\n    publishedAt\n    handle\n    vendor\n    variants(first: 1) {\n      nodes {\n        id\n        availableForSale\n        image {\n          url\n          altText\n          width\n          height\n        }\n        price {\n          amount\n          currencyCode\n        }\n        compareAtPrice {\n          amount\n          currencyCode\n        }\n        selectedOptions {\n          name\n          value\n        }\n        product {\n          handle\n          title\n        }\n      }\n    }\n  }\n\n': {
+    return: HomepageSectionsQuery;
+    variables: HomepageSectionsQueryVariables;
+  };
+  '#graphql\n  query SectionProducts($ids: [ID!]!) {\n    nodes(ids: $ids) {\n      ... on Product { ...ProductCard }\n    }\n  }\n  #graphql\n  fragment ProductCard on Product {\n    id\n    title\n    publishedAt\n    handle\n    vendor\n    variants(first: 1) {\n      nodes {\n        id\n        availableForSale\n        image {\n          url\n          altText\n          width\n          height\n        }\n        price {\n          amount\n          currencyCode\n        }\n        compareAtPrice {\n          amount\n          currencyCode\n        }\n        selectedOptions {\n          name\n          value\n        }\n        product {\n          handle\n          title\n        }\n      }\n    }\n  }\n\n': {
+    return: SectionProductsQuery;
+    variables: SectionProductsQueryVariables;
+  };
+  '#graphql\n  query SectionCollections($ids: [ID!]!) {\n    nodes(ids: $ids) {\n      ... on Collection {\n        id\n        title\n        handle\n        image {\n          altText\n          width\n          height\n          url\n        }\n      }\n    }\n  }\n': {
+    return: SectionCollectionsQuery;
+    variables: SectionCollectionsQueryVariables;
   };
   '#graphql\n  query ApiAllProducts(\n    $query: String\n    $count: Int\n    $reverse: Boolean\n    $country: CountryCode\n    $language: LanguageCode\n    $sortKey: ProductSortKeys\n  ) @inContext(country: $country, language: $language) {\n    products(first: $count, sortKey: $sortKey, reverse: $reverse, query: $query) {\n      nodes {\n        ...ProductCard\n      }\n    }\n  }\n  #graphql\n  fragment ProductCard on Product {\n    id\n    title\n    publishedAt\n    handle\n    vendor\n    variants(first: 1) {\n      nodes {\n        id\n        availableForSale\n        image {\n          url\n          altText\n          width\n          height\n        }\n        price {\n          amount\n          currencyCode\n        }\n        compareAtPrice {\n          amount\n          currencyCode\n        }\n        selectedOptions {\n          name\n          value\n        }\n        product {\n          handle\n          title\n        }\n      }\n    }\n  }\n\n': {
     return: ApiAllProductsQuery;

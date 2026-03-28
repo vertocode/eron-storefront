@@ -21,7 +21,7 @@ export function LogoList({
 }: LogoListProps) {
   let items: LogoItem[] = [];
   try {
-    items = logos ? JSON.parse(logos) : [];
+    items = logos ? (JSON.parse(logos) as LogoItem[]) : [];
   } catch {
     return null;
   }
