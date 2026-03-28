@@ -28,7 +28,7 @@ export function OrderCard({order}: {order: OrderCardFragment}) {
               width={168}
               height={168}
               className="w-full fadeIn cover"
-              alt={lineItems[0].image?.altText ?? 'Order image'}
+              alt={lineItems[0].image?.altText ?? 'Imagem do pedido'}
               src={lineItems[0].image.url}
             />
           </div>
@@ -40,17 +40,17 @@ export function OrderCard({order}: {order: OrderCardFragment}) {
         >
           <Heading as="h3" format size="copy">
             {lineItems.length > 1
-              ? `${lineItems[0].title} +${lineItems.length - 1} more`
+              ? `${lineItems[0].title} +${lineItems.length - 1} mais`
               : lineItems[0].title}
           </Heading>
           <dl className="grid grid-gap-1">
-            <dt className="sr-only">Order ID</dt>
+            <dt className="sr-only">ID do Pedido</dt>
             <dd>
               <Text size="fine" color="subtle">
-                Order No. {order.number}
+                Pedido Nº {order.number}
               </Text>
             </dd>
-            <dt className="sr-only">Order Date</dt>
+            <dt className="sr-only">Data do Pedido</dt>
             <dd>
               <Text size="fine" color="subtle">
                 {new Date(order.processedAt).toDateString()}
@@ -58,7 +58,7 @@ export function OrderCard({order}: {order: OrderCardFragment}) {
             </dd>
             {fulfillmentStatus && (
               <>
-                <dt className="sr-only">Fulfillment Status</dt>
+                <dt className="sr-only">Status do Envio</dt>
                 <dd className="mt-2">
                   <span
                     className={`px-3 py-1 text-xs font-medium rounded-full ${
@@ -82,7 +82,7 @@ export function OrderCard({order}: {order: OrderCardFragment}) {
           prefetch="intent"
         >
           <Text color="subtle" className="ml-3">
-            View Details
+            Ver Detalhes
           </Text>
         </Link>
       </div>

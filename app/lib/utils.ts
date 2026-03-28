@@ -49,7 +49,7 @@ export function formatText(input?: string | React.ReactNode) {
     return input;
   }
 
-  return typographicBase(input, {locale: 'en-us'}).replace(
+  return typographicBase(input, {locale: 'pt-br'}).replace(
     /\s([^\s<]+)\s*$/g,
     '\u00A0$1',
   );
@@ -234,12 +234,12 @@ export const getInputStyleClasses = (isError?: string | null) => {
 
 export function statusMessage(status: FulfillmentStatus) {
   const translations: Record<FulfillmentStatus, string> = {
-    SUCCESS: 'Success',
-    PENDING: 'Pending',
-    OPEN: 'Open',
-    FAILURE: 'Failure',
-    ERROR: 'Error',
-    CANCELLED: 'Cancelled',
+    SUCCESS: 'Sucesso',
+    PENDING: 'Pendente',
+    OPEN: 'Aberto',
+    FAILURE: 'Falha',
+    ERROR: 'Erro',
+    CANCELLED: 'Cancelado',
   };
   try {
     return translations?.[status];

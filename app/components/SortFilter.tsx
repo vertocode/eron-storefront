@@ -116,7 +116,7 @@ export function FiltersDrawer({
         ) : null}
 
         <Heading as="h4" size="lead" className="pb-4">
-          Filter By
+          Filtrar Por
         </Heading>
         <div className="divide-y">
           {filters.map((filter: Filter) => (
@@ -154,7 +154,7 @@ function AppliedFilters({filters = []}: {filters: AppliedFilter[]}) {
   return (
     <>
       <Heading as="h4" size="lead" className="pb-4">
-        Applied filters
+        Filtros aplicados
       </Heading>
       <div className="flex flex-wrap gap-2">
         {filters.map((filter: AppliedFilter) => {
@@ -265,7 +265,7 @@ function PriceRangeFilter({max, min}: {max?: number; min?: number}) {
   return (
     <div className="flex flex-col">
       <label className="mb-4">
-        <span>from</span>
+        <span>de</span>
         <input
           name="minPrice"
           className="text-black"
@@ -276,7 +276,7 @@ function PriceRangeFilter({max, min}: {max?: number; min?: number}) {
         />
       </label>
       <label>
-        <span>to</span>
+        <span>até</span>
         <input
           name="maxPrice"
           className="text-black"
@@ -316,21 +316,21 @@ function filterInputToParams(
 
 export default function SortMenu() {
   const items: {label: string; key: SortParam}[] = [
-    {label: 'Featured', key: 'featured'},
+    {label: 'Destaques', key: 'featured'},
     {
-      label: 'Price: Low - High',
+      label: 'Preço: Menor - Maior',
       key: 'price-low-high',
     },
     {
-      label: 'Price: High - Low',
+      label: 'Preço: Maior - Menor',
       key: 'price-high-low',
     },
     {
-      label: 'Best Selling',
+      label: 'Mais Vendidos',
       key: 'best-selling',
     },
     {
-      label: 'Newest',
+      label: 'Mais Recentes',
       key: 'newest',
     },
   ];
@@ -342,7 +342,7 @@ export default function SortMenu() {
     <Menu as="div" className="relative z-40">
       <Menu.Button className="flex items-center">
         <span className="px-2">
-          <span className="px-2 font-medium">Sort by:</span>
+          <span className="px-2 font-medium">Ordenar por:</span>
           <span>{(activeItem || items[0]).label}</span>
         </span>
         <IconCaret />

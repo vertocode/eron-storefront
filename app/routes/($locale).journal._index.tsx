@@ -61,7 +61,7 @@ export default function Journals() {
 
   return (
     <>
-      <PageHeader heading={BLOG_HANDLE} />
+      <PageHeader heading="Jornal" />
       <Section>
         <Grid as="ol" layout="blog">
           {articles.map((article, i) => (

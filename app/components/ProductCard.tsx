@@ -40,9 +40,9 @@ export function ProductCard({
   if (label) {
     cardLabel = label;
   } else if (isDiscounted(price as MoneyV2, compareAtPrice as MoneyV2)) {
-    cardLabel = 'Sale';
+    cardLabel = 'Promoção';
   } else if (isNewArrival(product.publishedAt)) {
-    cardLabel = 'New';
+    cardLabel = 'Novo';
   }
 
   return (
@@ -60,7 +60,7 @@ export function ProductCard({
                 sizes="(min-width: 64em) 25vw, (min-width: 48em) 30vw, 45vw"
                 aspectRatio="4/5"
                 data={image}
-                alt={image.altText || `Picture of ${product.title}`}
+                alt={image.altText || `Imagem de ${product.title}`}
                 loading={loading}
               />
             )}
@@ -105,14 +105,14 @@ export function ProductCard({
           className="mt-2"
         >
           <Text as="span" className="flex items-center justify-center gap-2">
-            Add to Cart
+            Adicionar ao Carrinho
           </Text>
         </AddToCartButton>
       )}
       {quickAdd && !firstVariant.availableForSale && (
         <Button variant="secondary" className="mt-2" disabled>
           <Text as="span" className="flex items-center justify-center gap-2">
-            Sold out
+            Esgotado
           </Text>
         </Button>
       )}
