@@ -146,33 +146,49 @@ export default function Product() {
   return (
     <>
       <Section className="px-0 md:px-8 lg:px-12">
-        <div className="grid items-start md:gap-6 lg:gap-20 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid items-start md:gap-10 lg:gap-16 md:grid-cols-2">
           <ProductGallery
             media={media.nodes}
-            className="w-full lg:col-span-2"
+            className="w-full"
           />
-          <div className="sticky md:-mb-nav md:top-nav md:-translate-y-nav md:h-screen md:pt-nav hiddenScroll md:overflow-y-scroll">
-            <section className="flex flex-col w-full max-w-xl gap-8 p-6 md:mx-auto md:max-w-sm md:px-0">
-              <div className="grid gap-2">
-                <Heading as="h1" className="whitespace-normal">
+          <div className="sticky md:top-nav md:pt-6 hiddenScroll md:overflow-y-auto">
+            <section className="flex flex-col w-full max-w-xl gap-6 p-6 md:mx-auto md:px-0">
+              {/* Header */}
+              <div className="flex flex-col gap-1">
+                {vendor && (
+                  <Text className="text-primary/50 font-medium text-sm uppercase tracking-wide">
+                    {vendor}
+                  </Text>
+                )}
+                <Heading as="h1" className="whitespace-normal text-2xl md:text-3xl">
                   {title}
                 </Heading>
-                {vendor && (
-                  <Text className={'opacity-50 font-medium'}>{vendor}</Text>
-                )}
+                {/* Price display */}
+                <ProductPrice selectedVariant={selectedVariant} />
               </div>
+
+              {/* Variant selector & add to cart */}
               <ProductForm
                 productOptions={productOptions}
                 selectedVariant={selectedVariant}
                 storeDomain={storeDomain}
               />
-              <div className="grid gap-4 py-4">
-                {descriptionHtml && (
-                  <ProductDetail
-                    title="Detalhes do Produto"
-                    content={descriptionHtml}
+
+              {/* Description inline (not accordion) */}
+              {descriptionHtml && (
+                <div className="pt-4 border-t border-primary/10">
+                  <Text as="h4" size="lead" className="mb-3 font-semibold">
+                    Descrição
+                  </Text>
+                  <div
+                    className="prose dark:prose-invert text-primary/70 text-sm leading-relaxed"
+                    dangerouslySetInnerHTML={{__html: descriptionHtml}}
                   />
-                )}
+                </div>
+              )}
+
+              {/* Policies in accordion */}
+              <div className="grid gap-3 pt-2">
                 {shippingPolicy?.body && (
                   <ProductDetail
                     title="Envio"
@@ -239,92 +255,97 @@ export function ProductForm({
     selectedVariant?.compareAtPrice?.amount &&
     selectedVariant?.price?.amount < selectedVariant?.compareAtPrice?.amount;
 
+  const selectedOptionName = (optionIndex: number) =>
+    selectedVariant?.selectedOptions[optionIndex]?.value;
+
+  const hasSwatches = (option: MappedProductOptions) =>
+    option.optionValues.some((v) => v.swatch?.color || v.swatch?.image?.previewImage?.url);
+
   return (
-    <div className="grid gap-10">
-      <div className="grid gap-4">
+    <div className="grid gap-6">
+      <div className="grid gap-5">
         {productOptions.map((option, optionIndex) => (
           <div
             key={option.name}
-            className="product-options flex flex-col flex-wrap mb-4 gap-y-2 last:mb-0"
+            className="flex flex-col gap-2"
           >
-            <Heading as="legend" size="lead" className="min-w-[4rem]">
-              {option.name}
-            </Heading>
-            <div className="flex flex-wrap items-baseline gap-4">
-              {option.optionValues.length > 7 ? (
-                <div className="relative w-full">
-                  <Listbox>
-                    {({open}) => (
-                      <>
-                        <Listbox.Button
-                          ref={closeRef}
-                          className={clsx(
-                            'flex items-center justify-between w-full py-3 px-4 border border-primary',
-                            open
-                              ? 'rounded-b md:rounded-t md:rounded-b-none'
-                              : 'rounded',
-                          )}
-                        >
-                          <span>
-                            {
-                              selectedVariant?.selectedOptions[optionIndex]
-                                .value
-                            }
-                          </span>
-                          <IconCaret direction={open ? 'up' : 'down'} />
-                        </Listbox.Button>
-                        <Listbox.Options
-                          className={clsx(
-                            'border-primary bg-contrast absolute bottom-12 z-30 grid h-48 w-full overflow-y-scroll rounded-t border px-2 py-2 transition-[max-height] duration-150 sm:bottom-auto md:rounded-b md:rounded-t-none md:border-t-0 md:border-b',
-                            open ? 'max-h-48' : 'max-h-0',
-                          )}
-                        >
-                          {option.optionValues
-                            .filter((value) => value.available)
-                            .map(
-                              ({
-                                isDifferentProduct,
-                                name,
-                                variantUriQuery,
-                                handle,
-                                selected,
-                              }) => (
-                                <Listbox.Option
-                                  key={`option-${option.name}-${name}`}
-                                  value={name}
+            <div className="flex items-center gap-2">
+              <Text as="legend" className="font-semibold text-sm">
+                {option.name}
+              </Text>
+              <Text className="text-primary/50 text-sm">
+                {selectedOptionName(optionIndex)}
+              </Text>
+            </div>
+
+            {option.optionValues.length > 7 ? (
+              <div className="relative w-full">
+                <Listbox>
+                  {({open}) => (
+                    <>
+                      <Listbox.Button
+                        ref={closeRef}
+                        className={clsx(
+                          'flex items-center justify-between w-full py-3 px-4 border border-primary/20 bg-contrast text-sm',
+                          open
+                            ? 'rounded-t'
+                            : 'rounded-lg',
+                        )}
+                      >
+                        <span>{selectedOptionName(optionIndex)}</span>
+                        <IconCaret direction={open ? 'up' : 'down'} />
+                      </Listbox.Button>
+                      <Listbox.Options
+                        className={clsx(
+                          'border-primary/20 bg-contrast absolute z-30 w-full max-h-48 overflow-y-auto rounded-b-lg border border-t-0 shadow-lg',
+                          open ? 'block' : 'hidden',
+                        )}
+                      >
+                        {option.optionValues
+                          .filter((value) => value.available)
+                          .map(
+                            ({
+                              isDifferentProduct,
+                              name,
+                              variantUriQuery,
+                              handle,
+                              selected,
+                            }) => (
+                              <Listbox.Option
+                                key={`option-${option.name}-${name}`}
+                                value={name}
+                              >
+                                <Link
+                                  {...(!isDifferentProduct
+                                    ? {rel: 'nofollow'}
+                                    : {})}
+                                  to={`/products/${handle}?${variantUriQuery}`}
+                                  preventScrollReset
+                                  className={clsx(
+                                    'text-primary w-full px-4 py-2.5 text-sm transition flex justify-between items-center cursor-pointer hover:bg-primary/5',
+                                    selected && 'bg-primary/10 font-medium',
+                                  )}
+                                  onClick={() => {
+                                    if (!closeRef?.current) return;
+                                    closeRef.current.click();
+                                  }}
                                 >
-                                  <Link
-                                    {...(!isDifferentProduct
-                                      ? {rel: 'nofollow'}
-                                      : {})}
-                                    to={`/products/${handle}?${variantUriQuery}`}
-                                    preventScrollReset
-                                    className={clsx(
-                                      'text-primary w-full p-2 transition rounded flex justify-start items-center text-left cursor-pointer',
-                                      selected && 'bg-primary/10',
-                                    )}
-                                    onClick={() => {
-                                      if (!closeRef?.current) return;
-                                      closeRef.current.click();
-                                    }}
-                                  >
-                                    {name}
-                                    {selected && (
-                                      <span className="ml-2">
-                                        <IconCheck />
-                                      </span>
-                                    )}
-                                  </Link>
-                                </Listbox.Option>
-                              ),
-                            )}
-                        </Listbox.Options>
-                      </>
-                    )}
-                  </Listbox>
-                </div>
-              ) : (
-                option.optionValues.map(
+                                  {name}
+                                  {selected && (
+                                    <IconCheck />
+                                  )}
+                                </Link>
+                              </Listbox.Option>
+                            ),
+                          )}
+                      </Listbox.Options>
+                    </>
+                  )}
+                </Listbox>
+              </div>
+            ) : hasSwatches(option) ? (
+              <div className="flex flex-wrap items-center gap-2">
+                {option.optionValues.map(
                   ({
                     isDifferentProduct,
                     name,
@@ -341,74 +362,102 @@ export function ProductForm({
                       preventScrollReset
                       prefetch="intent"
                       replace
+                      title={name}
                       className={clsx(
-                        'leading-none py-1 border-b-[1.5px] cursor-pointer transition-all duration-200',
-                        selected ? 'border-primary/50' : 'border-primary/0',
-                        available ? 'opacity-100' : 'opacity-50',
+                        'relative rounded-full w-10 h-10 border-2 transition-all duration-200 cursor-pointer',
+                        selected
+                          ? 'border-primary ring-2 ring-primary/20 ring-offset-1'
+                          : 'border-primary/20 hover:border-primary/50',
+                        !available && 'opacity-40 cursor-not-allowed',
                       )}
                     >
-                      <ProductOptionSwatch swatch={swatch} name={name} />
+                      <SwatchContent swatch={swatch} name={name} />
+                      {!available && (
+                        <span className="absolute inset-0 flex items-center justify-center">
+                          <span className="block w-[1px] h-full bg-primary/50 rotate-45 absolute" />
+                        </span>
+                      )}
                     </Link>
                   ),
-                )
-              )}
-            </div>
+                )}
+              </div>
+            ) : (
+              <div className="flex flex-wrap items-center gap-2">
+                {option.optionValues.map(
+                  ({
+                    isDifferentProduct,
+                    name,
+                    variantUriQuery,
+                    handle,
+                    selected,
+                    available,
+                  }) => (
+                    <Link
+                      key={option.name + name}
+                      {...(!isDifferentProduct ? {rel: 'nofollow'} : {})}
+                      to={`/products/${handle}?${variantUriQuery}`}
+                      preventScrollReset
+                      prefetch="intent"
+                      replace
+                      className={clsx(
+                        'px-4 py-2 text-sm border rounded-lg transition-all duration-200 cursor-pointer',
+                        selected
+                          ? 'border-primary bg-primary text-contrast font-medium'
+                          : 'border-primary/20 hover:border-primary/50',
+                        !available && 'opacity-40 cursor-not-allowed line-through',
+                      )}
+                    >
+                      {name}
+                    </Link>
+                  ),
+                )}
+              </div>
+            )}
           </div>
         ))}
-        {selectedVariant && (
-          <div className="grid items-stretch gap-4">
-            {isOutOfStock ? (
-              <Button variant="secondary" disabled>
-                <Text>Esgotado</Text>
-              </Button>
-            ) : (
-              <AddToCartButton
-                lines={[
-                  {
-                    merchandiseId: selectedVariant.id!,
-                    quantity: 1,
-                  },
-                ]}
-                variant="primary"
-                data-test="add-to-cart"
-              >
-                <Text
-                  as="span"
-                  className="flex items-center justify-center gap-2"
-                >
-                  <span>Adicionar ao Carrinho</span> <span>·</span>{' '}
-                  <Money
-                    withoutTrailingZeros
-                    data={selectedVariant?.price!}
-                    as="span"
-                    data-test="price"
-                  />
-                  {isOnSale && (
-                    <Money
-                      withoutTrailingZeros
-                      data={selectedVariant?.compareAtPrice!}
-                      as="span"
-                      className="opacity-50 strike"
-                    />
-                  )}
-                </Text>
-              </AddToCartButton>
-            )}
-            {!isOutOfStock && (
-              <ShopPayButton
-                width="100%"
-                variantIds={[selectedVariant?.id!]}
-                storeDomain={storeDomain}
-              />
-            )}
-          </div>
-        )}
       </div>
+
+      {/* Add to cart */}
+      {selectedVariant && (
+        <div className="grid items-stretch gap-3 pt-2">
+          {isOutOfStock ? (
+            <Button variant="secondary" disabled className="rounded-lg py-3">
+              <Text>Esgotado</Text>
+            </Button>
+          ) : (
+            <AddToCartButton
+              lines={[
+                {
+                  merchandiseId: selectedVariant.id!,
+                  quantity: 1,
+                },
+              ]}
+              variant="primary"
+              data-test="add-to-cart"
+              className="rounded-lg py-3"
+            >
+              <Text
+                as="span"
+                className="flex items-center justify-center gap-2 text-base"
+              >
+                Adicionar ao Carrinho
+              </Text>
+            </AddToCartButton>
+          )}
+          {!isOutOfStock && (
+            <ShopPayButton
+              width="100%"
+              variantIds={[selectedVariant?.id!]}
+              storeDomain={storeDomain}
+            />
+          )}
+        </div>
+      )}
     </div>
   );
 }
 
-function ProductOptionSwatch({
+function SwatchContent({
   swatch,
   name,
 }: {
@@ -418,17 +467,63 @@ function ProductOptionSwatch({
   const image = swatch?.image?.previewImage?.url;
   const color = swatch?.color;
 
-  if (!image && !color) return name;
-
   return (
-    <div
+    <span
       aria-label={name}
-      className="w-8 h-8"
+      className="block w-full h-full rounded-full overflow-hidden"
       style={{
-        backgroundColor: color || 'transparent',
+        backgroundColor: color || '#e5e5e5',
       }}
     >
-      {!!image && <img src={image} alt={name} />}
+      {!!image && (
+        <img src={image} alt={name} className="w-full h-full object-cover" />
+      )}
+    </span>
+  );
+}
+
+function ProductPrice({
+  selectedVariant,
+}: {
+  selectedVariant: ProductFragment['selectedOrFirstAvailableVariant'];
+}) {
+  if (!selectedVariant) return null;
+
+  const isOnSale =
+    selectedVariant.price?.amount &&
+    selectedVariant.compareAtPrice?.amount &&
+    selectedVariant.price.amount < selectedVariant.compareAtPrice.amount;
+
+  return (
+    <div className="flex items-center gap-3 mt-1">
+      <Money
+        withoutTrailingZeros
+        data={selectedVariant.price!}
+        as="span"
+        className={clsx(
+          'text-xl font-semibold',
+          isOnSale && 'text-red-600 dark:text-red-400',
+        )}
+      />
+      {isOnSale && (
+        <Money
+          withoutTrailingZeros
+          data={selectedVariant.compareAtPrice!}
+          as="span"
+          className="text-base text-primary/40 line-through"
+        />
+      )}
+      {isOnSale && (
+        <span className="text-xs font-semibold text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 px-2 py-0.5 rounded-full">
+          {Math.round(
+            (1 -
+              parseFloat(selectedVariant.price!.amount) /
+                parseFloat(selectedVariant.compareAtPrice!.amount)) *
+              100,
+          )}
+          % OFF
+        </span>
+      )}
     </div>
   );
 }
@@ -443,37 +538,28 @@ function ProductDetail({
   learnMore?: string;
 }) {
   return (
-    <Disclosure key={title} as="div" className="grid w-full gap-2">
+    <Disclosure key={title} as="div" className="border border-primary/10 rounded-lg overflow-hidden">
       {({open}) => (
         <>
-          <Disclosure.Button className="text-left">
-            <div className="flex justify-between">
-              <Text size="lead" as="h4">
-                {title}
-              </Text>
-              <IconClose
-                className={clsx(
-                  'transition-transform transform-gpu duration-200',
-                  !open && 'rotate-[45deg]',
-                )}
-              />
-            </div>
+          <Disclosure.Button className="flex justify-between items-center w-full px-4 py-3 text-left hover:bg-primary/5 transition-colors">
+            <Text as="h4" className="font-semibold text-sm">
+              {title}
+            </Text>
+            <IconCaret direction={open ? 'up' : 'down'} />
           </Disclosure.Button>
 
-          <Disclosure.Panel className={'pb-4 pt-2 grid gap-2'}>
+          <Disclosure.Panel className="px-4 pb-4 pt-1">
             <div
-              className="prose dark:prose-invert"
+              className="prose dark:prose-invert text-sm text-primary/70 leading-relaxed"
               dangerouslySetInnerHTML={{__html: content}}
             />
             {learnMore && (
-              <div className="">
-                <Link
-                  className="pb-px border-b border-primary/30 text-primary/50"
-                  to={learnMore}
-                >
-                  Saiba mais
-                </Link>
-              </div>
+              <Link
+                className="inline-block mt-2 text-sm text-primary/60 hover:text-primary underline underline-offset-2"
+                to={learnMore}
+              >
+                Saiba mais
+              </Link>
             )}
           </Disclosure.Panel>
         </>

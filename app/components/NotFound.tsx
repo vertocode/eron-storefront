@@ -3,8 +3,8 @@ import {FeaturedSection} from './FeaturedSection';
 import {PageHeader, Text} from './Text';
 
 export function NotFound({type = 'page'}: {type?: string}) {
-  const heading = `Não encontramos esta ${type === ‘page’ ? ‘página’ : type}`;
-  const description = `Não conseguimos encontrar ${type === ‘page’ ? ‘a página’ : type} que você procura. Tente verificar a URL ou voltar para a página inicial.`;
+  const heading = type === 'page' ? 'Pagina nao encontrada' : `${type} nao encontrado`;
+  const description = 'Nao conseguimos encontrar o que voce procura. Tente verificar a URL ou voltar para a pagina inicial.';
 
   return (
     <>
@@ -13,7 +13,7 @@ export function NotFound({type = 'page'}: {type?: string}) {
           {description}
         </Text>
         <Button width="auto" variant="secondary" to={'/'}>
-          Ir para a página inicial
+          Ir para a pagina inicial
         </Button>
       </PageHeader>
       <FeaturedSection />
