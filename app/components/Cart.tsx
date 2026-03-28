@@ -7,6 +7,7 @@ import {
   Image,
   Money,
   useOptimisticData,
+  useOptimisticCart,
   OptimisticInput,
   type CartReturn,
 } from '@shopify/hydrogen';
@@ -35,12 +36,17 @@ export function Cart({
   onClose?: () => void;
   cart: CartReturn | null;
 }) {
-  const linesCount = Boolean(cart?.lines?.edges?.length || 0);
+  const optimisticCart = useOptimisticCart(cart);
+  const linesCount = Boolean(
+    optimisticCart?.lines?.nodes?.length ||
+    (optimisticCart?.lines as any)?.edges?.length ||
+    0,
+  );
 
   return (
     <>
       <CartEmpty hidden={linesCount} onClose={onClose} layout={layout} />
-      <CartDetails cart={cart} layout={layout} />
+      <CartDetails cart={optimisticCart as any} layout={layout} />
     </>
   );
 }
@@ -52,8 +58,7 @@ export function CartDetails({
   layout: Layouts;
   cart: CartType | null;
 }) {
-  // @todo: get optimistic cart cost
-  const cartHasItems = !!cart && cart.totalQuantity > 0;
+  const cartHasItems = !!cart && (cart.totalQuantity > 0 || (cart.lines?.nodes || (cart.lines as any)?.edges || []).length > 0);
   const container = {
     drawer: 'grid grid-cols-1 h-screen-no-nav grid-rows-[1fr_auto]',
     page: 'w-full pb-12 grid md:grid-cols-2 md:items-start gap-8 md:gap-8 lg:gap-12',
@@ -157,7 +162,11 @@ function CartLines({
   layout: Layouts;
   lines: CartType['lines'] | undefined;
 }) {
-  const currentLines = cartLines ? flattenConnection(cartLines) : [];
+  const currentLines = cartLines
+    ? (cartLines as any).nodes
+      ? (cartLines as any).nodes
+      : flattenConnection(cartLines)
+    : [];
   const scrollRef = useRef(null);
   const {y} = useScroll(scrollRef);
 
@@ -175,7 +184,7 @@ function CartLines({
       className={className}
     >
       <ul className="grid gap-6 md:gap-10">
-        {currentLines.map((line) => (
+        {currentLines.map((line: CartLine) => (
           <CartLineItem key={line.id} line={line as CartLine} />
         ))}
       </ul>
@@ -241,6 +250,7 @@ type OptimisticData = {
 
 function CartLineItem({line}: {line: CartLine}) {
   const optimisticData = useOptimisticData<OptimisticData>(line?.id);
+  const isOptimistic = (line as any).isOptimistic;
 
   if (!line?.id) return null;
 
@@ -251,10 +261,11 @@ function CartLineItem({line}: {line: CartLine}) {
   return (
     <li
       key={id}
-      className="flex gap-4"
+      className={clsx(
+        'flex gap-4 transition-opacity duration-300',
+        isOptimistic && 'opacity-60 animate-pulse',
+      )}
       style={{
-        // Hide the line item if the optimistic data action is remove
-        // Do not remove the form from the DOM
         display: optimisticData?.action === 'remove' ? 'none' : 'flex',
       }}
     >
@@ -290,12 +301,14 @@ function CartLineItem({line}: {line: CartLine}) {
             ))}
           </div>
 
-          <div className="flex items-center gap-2">
-            <div className="flex justify-start text-copy">
-              <CartLineQuantityAdjust line={line} />
+          {!isOptimistic && (
+            <div className="flex items-center gap-2">
+              <div className="flex justify-start text-copy">
+                <CartLineQuantityAdjust line={line} />
+              </div>
+              <ItemRemoveButton lineId={id} />
             </div>
-            <ItemRemoveButton lineId={id} />
-          </div>
+          )}
         </div>
         <Text>
           <CartLinePrice line={line} as="span" />
