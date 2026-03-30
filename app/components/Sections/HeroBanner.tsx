@@ -146,7 +146,7 @@ function SpreadMedia({data, loading, sizes}: SpreadMediaProps) {
   return (
     <MediaFile
       data={data as Media}
-      className="absolute inset-0 w-full h-full object-cover object-center"
+      className="absolute inset-0 w-full h-full object-fill"
       mediaOptions={{
         video: {
           controls: false,
