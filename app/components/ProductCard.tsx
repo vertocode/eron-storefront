@@ -37,6 +37,10 @@ export function ProductCard({
   if (!firstVariant) return null;
   const {image, price, compareAtPrice} = firstVariant;
 
+  const productImages = cardProduct.images?.nodes ?? [];
+  const firstImage = productImages[0] ?? image;
+  const secondImage = productImages[1] ?? null;
+
   if (label) {
     cardLabel = label;
   } else if (isDiscounted(price as MoneyV2, compareAtPrice as MoneyV2)) {
@@ -53,21 +57,34 @@ export function ProductCard({
         prefetch="viewport"
       >
         <div className={clsx('grid gap-4', className)}>
-          <div className="card-image aspect-[4/5] bg-primary/5">
-            {image && (
+          <div className="card-image aspect-[4/5] bg-primary/5 relative overflow-hidden group">
+            {firstImage && (
               <Image
-                className="object-cover w-full fadeIn"
+                className={clsx(
+                  'object-cover w-full fadeIn absolute inset-0 transition-opacity duration-300',
+                  secondImage ? 'group-hover:opacity-0' : '',
+                )}
                 sizes="(min-width: 64em) 25vw, (min-width: 48em) 30vw, 45vw"
                 aspectRatio="4/5"
-                data={image}
-                alt={image.altText || `Imagem de ${product.title}`}
+                data={firstImage}
+                alt={firstImage.altText || `Imagem de ${product.title}`}
                 loading={loading}
+              />
+            )}
+            {secondImage && (
+              <Image
+                className="object-cover w-full absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                sizes="(min-width: 64em) 25vw, (min-width: 48em) 30vw, 45vw"
+                aspectRatio="4/5"
+                data={secondImage}
+                alt={secondImage.altText || `Imagem de ${product.title}`}
+                loading="lazy"
               />
             )}
             <Text
               as="label"
               size="fine"
-              className="absolute top-0 right-0 m-4 text-right text-notice"
+              className="absolute top-0 right-0 m-4 text-right text-notice z-10"
             >
               {cardLabel}
             </Text>
