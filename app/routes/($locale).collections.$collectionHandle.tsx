@@ -241,6 +241,27 @@ function ProductsLoadedOnScroll({
     }
   }, [inView, navigate, state, nextPageUrl, hasNextPage]);
 
+  if (nodes.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 px-6 text-center gap-4">
+        <span className="text-5xl">🛍️</span>
+        <h2 className="text-2xl font-semibold">
+          Essa coleção está chegando em breve!
+        </h2>
+        <p className="text-gray-500 max-w-md">
+          Ainda não temos produtos disponíveis aqui, mas estamos trabalhando
+          para trazer novidades incríveis para você. Fique de olho! 💪
+        </p>
+        <a
+          href="/collections/all"
+          className="mt-4 inline-block bg-primary text-contrast px-6 py-3 rounded font-medium hover:opacity-80 transition"
+        >
+          Ver todos os produtos
+        </a>
+      </div>
+    );
+  }
+
   return (
     <Grid layout="products" data-test="product-grid">
       {nodes.map((product: any, i: number) => (
