@@ -3,8 +3,8 @@ import {FeaturedSection} from './FeaturedSection';
 import {PageHeader, Text} from './Text';
 
 export function NotFound({type = 'page'}: {type?: string}) {
-  const heading = type === 'page' ? 'Pagina nao encontrada' : `${type} nao encontrado`;
-  const description = 'Nao conseguimos encontrar o que voce procura. Tente verificar a URL ou voltar para a pagina inicial.';
+  const heading = `Não encontramos esta ${type === 'page' ? 'página' : type}`;
+  const description = `Não conseguimos encontrar ${type === 'page' ? 'a página' : type} que você procura. Tente verificar a URL ou voltar para a página inicial.`;
 
   return (
     <>
