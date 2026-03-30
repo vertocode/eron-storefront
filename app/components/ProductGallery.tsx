@@ -1,4 +1,4 @@
-import {useState} from 'react';
+import {useState, useEffect} from 'react';
 import {Image} from '@shopify/hydrogen';
 
 import type {MediaFragment} from 'storefrontapi.generated';
@@ -9,11 +9,26 @@ import type {MediaFragment} from 'storefrontapi.generated';
 export function ProductGallery({
   media,
   className,
+  selectedVariantImage,
 }: {
   media: MediaFragment[];
   className?: string;
+  selectedVariantImage?: {url?: string | null} | null;
 }) {
   const [selectedIndex, setSelectedIndex] = useState(0);
+
+  useEffect(() => {
+    if (!selectedVariantImage?.url) return;
+    const variantUrl = selectedVariantImage.url.split('?')[0];
+    const matchIndex = media.findIndex((med) => {
+      if (med.__typename !== 'MediaImage') return false;
+      const mediaUrl = (med.image?.url ?? '').split('?')[0];
+      return mediaUrl === variantUrl;
+    });
+    if (matchIndex !== -1) {
+      setSelectedIndex(matchIndex);
+    }
+  }, [selectedVariantImage?.url, media]);
 
   if (!media.length) {
     return null;

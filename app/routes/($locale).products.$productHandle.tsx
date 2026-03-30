@@ -150,6 +150,7 @@ export default function Product() {
           <ProductGallery
             media={media.nodes}
             className="w-full"
+            selectedVariantImage={selectedVariant?.image}
           />
           <div className="sticky md:top-nav md:pt-6 hiddenScroll md:overflow-y-auto">
             <section className="flex flex-col w-full max-w-xl gap-6 p-6 md:mx-auto md:px-0">
