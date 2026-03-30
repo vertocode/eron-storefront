@@ -41,7 +41,7 @@ export function ProductGallery({
       : null;
 
   return (
-    <div className={`flex flex-col gap-4 w-full overflow-x-hidden ${className}`}>
+    <div className={`flex flex-col gap-4 w-full min-w-0 overflow-hidden ${className}`}>
       {/* Main image */}
       <div className="aspect-square bg-white dark:bg-contrast/10 rounded-lg overflow-hidden">
         {selectedImage && (
