@@ -463,7 +463,7 @@ function FooterSearch() {
         variant="minisearch"
         placeholder="Buscar..."
         name="q"
-        className="focus:border-contrast/20 dark:focus:border-primary/20"
+        className="focus:border-contrast/20 dark:focus:border-primary/20 !text-left"
       />
       <button
         type="submit"

@@ -14,6 +14,7 @@ import {
 
 import {Heading, PageHeader, Section, Text} from '~/components/Text';
 import {Input} from '~/components/Input';
+import {IconSearch} from '~/components/Icon';
 import {Grid} from '~/components/Grid';
 import {ProductCard} from '~/components/ProductCard';
 import {ProductSwimlane} from '~/components/ProductSwimlane';
@@ -98,7 +99,7 @@ export default function Search() {
             variant="search"
           />
           <button className="absolute right-0 py-2" type="submit">
-            Ir
+            <IconSearch />
           </button>
         </Form>
       </PageHeader>
