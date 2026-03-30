@@ -451,6 +451,32 @@ function FooterLink({item}: {item: ChildEnhancedMenuItem}) {
   );
 }
 
+function FooterSearch() {
+  const params = useParams();
+  return (
+    <Form
+      method="get"
+      action={params.locale ? `/${params.locale}/search` : '/search'}
+      className="flex items-center gap-2 mt-2"
+    >
+      <Input
+        type="search"
+        variant="minisearch"
+        placeholder="Buscar..."
+        name="q"
+        className="focus:border-contrast/20 dark:focus:border-primary/20"
+      />
+      <button
+        type="submit"
+        className="relative flex items-center justify-center w-8 h-8 focus:ring-primary/5"
+        aria-label="Buscar"
+      >
+        <IconSearch />
+      </button>
+    </Form>
+  );
+}
+
 function FooterMenu({menu}: {menu?: EnhancedMenu}) {
   const styles = {
     section: 'grid gap-4',
@@ -459,43 +485,48 @@ function FooterMenu({menu}: {menu?: EnhancedMenu}) {
 
   return (
     <>
-      {(menu?.items || []).map((item) => (
-        <section key={item.id} className={styles.section}>
-          <Disclosure>
-            {({open}) => (
-              <>
-                <Disclosure.Button className="text-left md:cursor-default">
-                  <Heading className="flex justify-between" size="lead" as="h3">
-                    {item.title}
-                    {item?.items?.length > 0 && (
-                      <span className="md:hidden">
-                        <IconCaret direction={open ? 'up' : 'down'} />
-                      </span>
-                    )}
-                  </Heading>
-                </Disclosure.Button>
-                {item?.items?.length > 0 ? (
-                  <div
-                    className={`${
-                      open ? `max-h-48 h-fit` : `max-h-0 md:max-h-fit`
-                    } overflow-hidden transition-all duration-300`}
-                  >
-                    <Suspense data-comment="This suspense fixes a hydration bug in Disclosure.Panel with static prop">
-                      <Disclosure.Panel static>
-                        <nav className={styles.nav}>
-                          {item.items.map((subItem: ChildEnhancedMenuItem) => (
-                            <FooterLink key={subItem.id} item={subItem} />
-                          ))}
-                        </nav>
-                      </Disclosure.Panel>
-                    </Suspense>
-                  </div>
-                ) : null}
-              </>
-            )}
-          </Disclosure>
-        </section>
-      ))}
+      {(menu?.items || []).map((item) => {
+        const isSearch = item.title.toLowerCase() === 'busca' || item.title.toLowerCase() === 'search';
+        return (
+          <section key={item.id} className={styles.section}>
+            <Disclosure>
+              {({open}) => (
+                <>
+                  <Disclosure.Button className="text-left md:cursor-default">
+                    <Heading className="flex justify-between" size="lead" as="h3">
+                      {item.title}
+                      {item?.items?.length > 0 && (
+                        <span className="md:hidden">
+                          <IconCaret direction={open ? 'up' : 'down'} />
+                        </span>
+                      )}
+                    </Heading>
+                  </Disclosure.Button>
+                  {item?.items?.length > 0 ? (
+                    <div
+                      className={`${
+                        open ? `max-h-48 h-fit` : `max-h-0 md:max-h-fit`
+                      } overflow-hidden transition-all duration-300`}
+                    >
+                      <Suspense data-comment="This suspense fixes a hydration bug in Disclosure.Panel with static prop">
+                        <Disclosure.Panel static>
+                          <nav className={styles.nav}>
+                            {item.items.map((subItem: ChildEnhancedMenuItem) => (
+                              <FooterLink key={subItem.id} item={subItem} />
+                            ))}
+                          </nav>
+                        </Disclosure.Panel>
+                      </Suspense>
+                    </div>
+                  ) : isSearch ? (
+                    <FooterSearch />
+                  ) : null}
+                </>
+              )}
+            </Disclosure>
+          </section>
+        );
+      })}
     </>
   );
 }
