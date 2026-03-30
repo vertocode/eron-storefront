@@ -146,7 +146,7 @@ export default function Product() {
   return (
     <>
       <Section className="px-0 md:px-8 lg:px-12">
-        <div className="grid items-start md:gap-10 lg:gap-16 md:grid-cols-2">
+        <div className="grid items-start md:gap-10 lg:gap-16 md:grid-cols-2 overflow-x-hidden">
           <ProductGallery
             media={media.nodes}
             className="w-full"

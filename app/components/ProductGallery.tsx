@@ -41,7 +41,7 @@ export function ProductGallery({
       : null;
 
   return (
-    <div className={`flex flex-col gap-4 ${className}`}>
+    <div className={`flex flex-col gap-4 w-full overflow-x-hidden ${className}`}>
       {/* Main image */}
       <div className="aspect-square bg-white dark:bg-contrast/10 rounded-lg overflow-hidden">
         {selectedImage && (
@@ -56,7 +56,7 @@ export function ProductGallery({
 
       {/* Thumbnails */}
       {media.length > 1 && (
-        <div className="flex gap-2 overflow-x-auto pb-1 hiddenScroll">
+        <div className="flex gap-2 overflow-x-auto pb-1 hiddenScroll w-full">
           {media.map((med, i) => {
             const thumbImage =
               med.__typename === 'MediaImage'
