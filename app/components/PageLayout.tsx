@@ -424,7 +424,15 @@ function Footer({menu}: {menu?: EnhancedMenu}) {
         bg-primary dark:bg-contrast dark:text-primary text-contrast overflow-hidden`}
     >
       <FooterMenu menu={menu} />
-      <CountrySelector />
+      <section className="grid w-full gap-4">
+        <Heading size="lead" className="cursor-default" as="h3">
+          País
+        </Heading>
+        <div className="flex items-center gap-2 text-sm opacity-70">
+          <span>🇧🇷</span>
+          <span>Brasil — R$</span>
+        </div>
+      </section>
       <div
         className={`self-end pt-8 opacity-50 md:col-span-2 lg:col-span-${itemsCount}`}
       >
@@ -463,11 +471,11 @@ function FooterSearch() {
         variant="minisearch"
         placeholder="Buscar..."
         name="q"
-        className="focus:border-contrast/20 dark:focus:border-primary/20 !text-left"
+        className="!block w-full focus:border-contrast/20 dark:focus:border-primary/20 !text-left"
       />
       <button
         type="submit"
-        className="relative flex items-center justify-center w-8 h-8 focus:ring-primary/5"
+        className="relative flex items-center justify-center w-8 h-8 focus:ring-primary/5 flex-shrink-0"
         aria-label="Buscar"
       >
         <IconSearch />

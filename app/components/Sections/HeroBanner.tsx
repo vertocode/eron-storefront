@@ -127,8 +127,15 @@ export function HeroBanner({
     </section>
   );
 
-  return collection_handle ? (
-    <Link to={`/collections/${collection_handle}`} prefetch="viewport">
+  // Sanitize: if someone saved a full path (e.g. "all/en-ad/products"), extract only the collection handle
+  const safeHandle = collection_handle
+    ? (collection_handle.includes('collections/')
+        ? collection_handle.split('collections/')[1]?.split('/')[0]
+        : collection_handle.split('/')[0])
+    : null;
+
+  return safeHandle ? (
+    <Link to={`/collections/${safeHandle}`} prefetch="viewport">
       {inner}
     </Link>
   ) : (

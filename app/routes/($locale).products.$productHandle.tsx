@@ -161,7 +161,7 @@ export default function Product() {
                     {vendor}
                   </Text>
                 )}
-                <Heading as="h1" className="whitespace-normal text-2xl md:text-3xl">
+                <Heading as="h1" className="whitespace-normal text-lg md:text-3xl">
                   {title}
                 </Heading>
                 {/* Price display */}
@@ -264,6 +264,13 @@ export function ProductForm({
 
   return (
     <div className="grid gap-6">
+      {isOutOfStock && (
+        <div className="flex items-center gap-2 p-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 text-sm">
+          <span>⚠️</span>
+          <span className="font-medium">Variante esgotada.</span>
+          <span className="opacity-70">Selecione outra opção ou volte em breve.</span>
+        </div>
+      )}
       <div className="grid gap-5">
         {productOptions.map((option, optionIndex) => (
           <div
@@ -401,14 +408,19 @@ export function ProductForm({
                       prefetch="intent"
                       replace
                       className={clsx(
-                        'px-4 py-2 text-sm border rounded-lg transition-all duration-200 cursor-pointer',
+                        'relative px-4 py-2 text-sm border rounded-lg transition-all duration-200 cursor-pointer overflow-hidden',
                         selected
                           ? 'border-primary bg-primary text-contrast font-medium'
                           : 'border-primary/20 hover:border-primary/50',
-                        !available && 'opacity-40 cursor-not-allowed line-through',
+                        !available && 'opacity-50 cursor-not-allowed',
                       )}
                     >
                       {name}
+                      {!available && (
+                        <span className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                          <span className="block w-px h-full bg-primary/60 rotate-45 absolute" />
+                        </span>
+                      )}
                     </Link>
                   ),
                 )}

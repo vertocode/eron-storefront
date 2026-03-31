@@ -258,18 +258,21 @@ function CartLineItem({line}: {line: CartLine}) {
 
   if (typeof quantity === 'undefined' || !merchandise?.product) return null;
 
+  const isOutOfStock = (merchandise as any).availableForSale === false;
+
   return (
     <li
       key={id}
       className={clsx(
         'flex gap-4 transition-opacity duration-300',
         isOptimistic && 'opacity-60 animate-pulse',
+        isOutOfStock && 'opacity-70',
       )}
       style={{
         display: optimisticData?.action === 'remove' ? 'none' : 'flex',
       }}
     >
-      <div className="flex-shrink">
+      <div className="flex-shrink relative">
         {merchandise.image && (
           <Image
             width={110}
@@ -278,6 +281,13 @@ function CartLineItem({line}: {line: CartLine}) {
             className="object-cover object-center w-24 h-24 border rounded md:w-28 md:h-28"
             alt={merchandise.title}
           />
+        )}
+        {isOutOfStock && (
+          <span className="absolute inset-0 flex items-center justify-center bg-contrast/40 rounded">
+            <span className="text-[10px] font-bold text-primary bg-contrast/80 px-1.5 py-0.5 rounded uppercase tracking-wide">
+              Esgotado
+            </span>
+          </span>
         )}
       </div>
 
@@ -301,11 +311,19 @@ function CartLineItem({line}: {line: CartLine}) {
             ))}
           </div>
 
+          {isOutOfStock && (
+            <div className="flex items-center gap-2 text-xs text-red-500 dark:text-red-400 font-medium">
+              ⚠️ Fora de estoque — remova do carrinho
+            </div>
+          )}
+
           {!isOptimistic && (
             <div className="flex items-center gap-2">
-              <div className="flex justify-start text-copy">
-                <CartLineQuantityAdjust line={line} />
-              </div>
+              {!isOutOfStock && (
+                <div className="flex justify-start text-copy">
+                  <CartLineQuantityAdjust line={line} />
+                </div>
+              )}
               <ItemRemoveButton lineId={id} />
             </div>
           )}
