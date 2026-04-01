@@ -46,7 +46,7 @@ export function PageLayout({children, layout}: LayoutProps) {
           </a>
         </div>
         {headerMenu && layout?.shop.name && (
-          <Header title={layout.shop.name} menu={headerMenu} />
+          <Header title={layout.shop.name} menu={headerMenu} footerMenu={footerMenu} />
         )}
         <main role="main" id="mainContent" className="flex-grow">
           {children}
@@ -57,7 +57,7 @@ export function PageLayout({children, layout}: LayoutProps) {
   );
 }
 
-function Header({title, menu}: {title: string; menu?: EnhancedMenu}) {
+function Header({title, menu, footerMenu}: {title: string; menu?: EnhancedMenu; footerMenu?: EnhancedMenu}) {
   const isHome = useIsHomePath();
 
   const {
@@ -84,7 +84,7 @@ function Header({title, menu}: {title: string; menu?: EnhancedMenu}) {
     <>
       <CartDrawer isOpen={isCartOpen} onClose={closeCart} />
       {menu && (
-        <MenuDrawer isOpen={isMenuOpen} onClose={closeMenu} menu={menu} />
+        <MenuDrawer isOpen={isMenuOpen} onClose={closeMenu} menu={menu} footerMenu={footerMenu} />
       )}
       <DesktopHeader
         isHome={isHome}
@@ -130,15 +130,17 @@ export function MenuDrawer({
   isOpen,
   onClose,
   menu,
+  footerMenu,
 }: {
   isOpen: boolean;
   onClose: () => void;
   menu: EnhancedMenu;
+  footerMenu?: EnhancedMenu;
 }) {
   return (
     <Drawer open={isOpen} onClose={onClose} openFrom="left" heading="Menu">
       <div className="grid">
-        <MenuMobileNav menu={menu} onClose={onClose} />
+        <MenuMobileNav menu={menu} footerMenu={footerMenu} onClose={onClose} />
       </div>
     </Drawer>
   );
@@ -146,14 +148,21 @@ export function MenuDrawer({
 
 function MenuMobileNav({
   menu,
+  footerMenu,
   onClose,
 }: {
   menu: EnhancedMenu;
+  footerMenu?: EnhancedMenu;
   onClose: () => void;
 }) {
+  // Collect all sub-items from footer "Páginas" sections (items with children)
+  const pageLinks = (footerMenu?.items || [])
+    .filter((item) => item.items?.length > 0)
+    .flatMap((item) => item.items);
+
   return (
     <nav className="grid gap-4 p-6 sm:gap-6 sm:px-12 sm:py-8">
-      {/* Top level menu items */}
+      {/* Main nav links */}
       {(menu?.items || []).map((item) => (
         <span key={item.id} className="block">
           <Link
@@ -170,6 +179,35 @@ function MenuMobileNav({
           </Link>
         </span>
       ))}
+
+      {/* Footer page links */}
+      {pageLinks.length > 0 && (
+        <>
+          <div className="border-t border-primary/10 pt-4 mt-2">
+            <Text as="p" size="fine" className="uppercase tracking-widest text-primary/40 mb-3">
+              Páginas
+            </Text>
+            {pageLinks.map((item) => (
+              <span key={item.id} className="block mb-3">
+                <Link
+                  to={item.to}
+                  target={item.target}
+                  onClick={onClose}
+                  className={({isActive}) =>
+                    isActive
+                      ? 'pb-1 border-b -mb-px text-primary/60'
+                      : 'pb-1 text-primary/60 hover:text-primary transition-colors'
+                  }
+                >
+                  <Text as="span" size="copy">
+                    {item.title}
+                  </Text>
+                </Link>
+              </span>
+            ))}
+          </div>
+        </>
+      )}
     </nav>
   );
 }
