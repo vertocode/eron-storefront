@@ -13,7 +13,6 @@ import {Input} from '~/components/Input';
 import {Drawer, useDrawer} from '~/components/Drawer';
 import {
   IconMenu,
-  IconCaret,
   IconLogin,
   IconAccount,
   IconBag,
@@ -440,16 +439,18 @@ function Footer({menu}: {menu?: EnhancedMenu}) {
 }
 
 function FooterLink({item}: {item: ChildEnhancedMenuItem}) {
+  const className = 'text-contrast/60 dark:text-primary/60 hover:text-contrast dark:hover:text-primary transition-colors';
+
   if (item.to.startsWith('http')) {
     return (
-      <a href={item.to} target={item.target} rel="noopener noreferrer">
+      <a href={item.to} target={item.target} rel="noopener noreferrer" className={className}>
         {item.title}
       </a>
     );
   }
 
   return (
-    <Link to={item.to} target={item.target} prefetch="intent">
+    <Link to={item.to} target={item.target} prefetch="intent" className={className}>
       {item.title}
     </Link>
   );
@@ -494,36 +495,21 @@ function FooterMenu({menu}: {menu?: EnhancedMenu}) {
         return (
           <section key={item.id} className={styles.section}>
             <Disclosure>
-              {({open}) => (
+              {() => (
                 <>
-                  <Disclosure.Button className="text-left md:cursor-default">
+                  <Disclosure.Button className="text-left cursor-default" as="div">
                     <Heading className="flex justify-between" size="lead" as="h3">
                       {item.title}
-                      {item?.items?.length > 0 && !isSearch && (
-                        <span className="md:hidden">
-                          <IconCaret direction={open ? 'up' : 'down'} />
-                        </span>
-                      )}
                     </Heading>
                   </Disclosure.Button>
                   {isSearch ? (
                     <FooterSearch />
                   ) : item?.items?.length > 0 ? (
-                    <div
-                      className={`${
-                        open ? `max-h-48 h-fit` : `max-h-0 md:max-h-fit`
-                      } overflow-hidden transition-all duration-300`}
-                    >
-                      <Suspense data-comment="This suspense fixes a hydration bug in Disclosure.Panel with static prop">
-                        <Disclosure.Panel static>
-                          <nav className={styles.nav}>
-                            {item.items.map((subItem: ChildEnhancedMenuItem) => (
-                              <FooterLink key={subItem.id} item={subItem} />
-                            ))}
-                          </nav>
-                        </Disclosure.Panel>
-                      </Suspense>
-                    </div>
+                    <nav className={styles.nav}>
+                      {item.items.map((subItem: ChildEnhancedMenuItem) => (
+                        <FooterLink key={subItem.id} item={subItem} />
+                      ))}
+                    </nav>
                   ) : null}
                 </>
               )}
