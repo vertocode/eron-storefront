@@ -502,14 +502,16 @@ function FooterMenu({menu}: {menu?: EnhancedMenu}) {
                   <Disclosure.Button className="text-left md:cursor-default">
                     <Heading className="flex justify-between" size="lead" as="h3">
                       {item.title}
-                      {item?.items?.length > 0 && (
+                      {item?.items?.length > 0 && !isSearch && (
                         <span className="md:hidden">
                           <IconCaret direction={open ? 'up' : 'down'} />
                         </span>
                       )}
                     </Heading>
                   </Disclosure.Button>
-                  {item?.items?.length > 0 ? (
+                  {isSearch ? (
+                    <FooterSearch />
+                  ) : item?.items?.length > 0 ? (
                     <div
                       className={`${
                         open ? `max-h-48 h-fit` : `max-h-0 md:max-h-fit`
@@ -525,8 +527,6 @@ function FooterMenu({menu}: {menu?: EnhancedMenu}) {
                         </Disclosure.Panel>
                       </Suspense>
                     </div>
-                  ) : isSearch ? (
-                    <FooterSearch />
                   ) : null}
                 </>
               )}
