@@ -262,9 +262,16 @@ function ProductsLoadedOnScroll({
     );
   }
 
+  const sortedNodes = [...nodes].sort((a: any, b: any) => {
+    const aOos = !a?.variants?.nodes?.[0]?.availableForSale;
+    const bOos = !b?.variants?.nodes?.[0]?.availableForSale;
+    if (aOos === bOos) return 0;
+    return aOos ? 1 : -1;
+  });
+
   return (
     <Grid layout="products" data-test="product-grid">
-      {nodes.map((product: any, i: number) => (
+      {sortedNodes.map((product: any, i: number) => (
         <ProductCard
           key={product.id}
           product={product}

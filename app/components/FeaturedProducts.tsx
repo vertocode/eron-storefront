@@ -109,9 +109,16 @@ function FeatureProductsContent({
     return <Text format>Nenhum produto encontrado.</Text>;
   }
 
+  const sorted = [...products].sort((a: any, b: any) => {
+    const aOos = !a?.variants?.nodes?.[0]?.availableForSale;
+    const bOos = !b?.variants?.nodes?.[0]?.availableForSale;
+    if (aOos === bOos) return 0;
+    return aOos ? 1 : -1;
+  });
+
   return (
     <>
-      {products.map((product) => (
+      {sorted.map((product) => (
         <ProductCard
           product={product}
           key={product.id}

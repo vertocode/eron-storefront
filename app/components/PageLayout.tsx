@@ -11,7 +11,6 @@ import {Cart} from '~/components/Cart';
 import {CartLoading} from '~/components/CartLoading';
 import {Input} from '~/components/Input';
 import {Drawer, useDrawer} from '~/components/Drawer';
-import {CountrySelector} from '~/components/CountrySelector';
 import {
   IconMenu,
   IconCaret,
@@ -112,7 +111,14 @@ function CartDrawer({isOpen, onClose}: {isOpen: boolean; onClose: () => void}) {
     <Drawer open={isOpen} onClose={onClose} heading="Carrinho" openFrom="right">
       <div className="grid">
         <Suspense fallback={<CartLoading />}>
-          <Await resolve={rootData?.cart}>
+          <Await
+            resolve={rootData?.cart}
+            errorElement={
+              <div className="p-6 text-center text-sm text-primary/60">
+                Erro ao carregar o carrinho. Tente novamente.
+              </div>
+            }
+          >
             {(cart) => <Cart layout="drawer" onClose={onClose} cart={cart} />}
           </Await>
         </Suspense>
@@ -410,9 +416,9 @@ function Badge({
 function Footer({menu}: {menu?: EnhancedMenu}) {
   const isHome = useIsHomePath();
   const itemsCount = menu
-    ? menu?.items?.length + 1 > 4
+    ? menu?.items?.length > 4
       ? 4
-      : menu?.items?.length + 1
+      : menu?.items?.length
     : [];
 
   return (
@@ -424,15 +430,6 @@ function Footer({menu}: {menu?: EnhancedMenu}) {
         bg-primary dark:bg-contrast dark:text-primary text-contrast overflow-hidden`}
     >
       <FooterMenu menu={menu} />
-      <section className="grid w-full gap-4">
-        <Heading size="lead" className="cursor-default" as="h3">
-          País
-        </Heading>
-        <div className="flex items-center gap-2 text-sm opacity-70">
-          <span>🇧🇷</span>
-          <span>Brasil — R$</span>
-        </div>
-      </section>
       <div
         className={`self-end pt-8 opacity-50 md:col-span-2 lg:col-span-${itemsCount}`}
       >

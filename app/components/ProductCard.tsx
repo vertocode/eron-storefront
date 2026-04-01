@@ -37,12 +37,18 @@ export function ProductCard({
   if (!firstVariant) return null;
   const {image, price, compareAtPrice} = firstVariant;
 
+  const isOutOfStock = !firstVariant.availableForSale;
+  const quantityAvailable = (firstVariant as any).quantityAvailable as number | null | undefined;
+  const isLowStock = !isOutOfStock && quantityAvailable != null && quantityAvailable > 0 && quantityAvailable < 5;
+
   const productImages = cardProduct.images?.nodes ?? [];
   const firstImage = productImages[0] ?? image;
   const secondImage = productImages[1] ?? null;
 
   if (label) {
     cardLabel = label;
+  } else if (isOutOfStock) {
+    cardLabel = null;
   } else if (isDiscounted(price as MoneyV2, compareAtPrice as MoneyV2)) {
     cardLabel = 'Promoção';
   } else if (isNewArrival(product.publishedAt)) {
@@ -50,7 +56,7 @@ export function ProductCard({
   }
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className={clsx('flex flex-col gap-2', isOutOfStock && 'opacity-70')}>
       <Link
         onClick={onClick}
         to={`/products/${product.handle}`}
@@ -62,7 +68,8 @@ export function ProductCard({
               <Image
                 className={clsx(
                   'object-cover w-full fadeIn absolute inset-0 transition-opacity duration-300',
-                  secondImage ? 'group-hover:opacity-0' : '',
+                  secondImage && !isOutOfStock ? 'group-hover:opacity-0' : '',
+                  isOutOfStock && 'grayscale',
                 )}
                 sizes="(min-width: 64em) 25vw, (min-width: 48em) 30vw, 45vw"
                 aspectRatio="4/5"
@@ -71,7 +78,7 @@ export function ProductCard({
                 loading={loading}
               />
             )}
-            {secondImage && (
+            {secondImage && !isOutOfStock && (
               <Image
                 className="object-cover w-full absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
                 sizes="(min-width: 64em) 25vw, (min-width: 48em) 30vw, 45vw"
@@ -81,13 +88,28 @@ export function ProductCard({
                 loading="lazy"
               />
             )}
-            <Text
-              as="label"
-              size="fine"
-              className="absolute top-0 right-0 m-4 text-right text-notice z-10"
-            >
-              {cardLabel}
-            </Text>
+            {/* Top-right label (Promoção / Novo) */}
+            {cardLabel && (
+              <Text
+                as="label"
+                size="fine"
+                className="absolute top-0 right-0 m-4 text-right text-notice z-10"
+              >
+                {cardLabel}
+              </Text>
+            )}
+            {/* Out of stock badge */}
+            {isOutOfStock && (
+              <div className="absolute bottom-0 left-0 right-0 bg-primary/80 text-contrast text-center text-xs font-semibold py-1.5 z-10 uppercase tracking-wide">
+                Sem estoque
+              </div>
+            )}
+            {/* Low stock badge */}
+            {isLowStock && (
+              <div className="absolute bottom-0 left-0 right-0 bg-amber-500 text-white text-center text-xs font-semibold py-1.5 z-10">
+                Apenas {quantityAvailable} {quantityAvailable === 1 ? 'unidade' : 'unidades'}
+              </div>
+            )}
           </div>
           <div className="grid gap-1">
             <Text

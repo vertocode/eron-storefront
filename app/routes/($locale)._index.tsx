@@ -246,7 +246,7 @@ export default function Homepage() {
       {/* Dynamic sections from Shopify metaobjects */}
       {sections && (
         <Suspense>
-          <Await resolve={sections}>
+          <Await resolve={sections} errorElement={<></>}>
             {(resolvedSections) => {
               const sectionArray = resolvedSections as any[];
               if (sectionArray?.length > 0) {
