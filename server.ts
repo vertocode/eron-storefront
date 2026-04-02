@@ -129,7 +129,13 @@ export default {
         customerAccount,
         getCartId: cartGetIdDefault(request.headers),
         setCartId: cartSetIdDefault(),
-        cartFragment: CART_FRAGMENT,
+        // cartQueryFragment overrides the fragment used by cart.get().
+        // Hydrogen's default uses `lines { edges { node {} } }` but useOptimisticCart
+        // reads `lines.nodes` — so without this fix the 2nd add-to-cart crashes:
+        //   optimisticCart.lines.nodes → undefined → .push() → TypeError
+        // Note: cartMutateFragment is NOT overridden because mutations use
+        //   `...CartApiMutation` spread name, not `...CartApiQuery`.
+        cartQueryFragment: CART_FRAGMENT,
       });
 
       /**
