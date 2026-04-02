@@ -51,6 +51,61 @@ export function Cart({
   );
 }
 
+type DiscountLine = {
+  label: string;
+  amount: string;
+  currencyCode: string;
+};
+
+/** Collects all discount allocations (line-level + cart-level), deduped by label. */
+function buildDiscountBreakdown(cart: CartType | null): {
+  breakdown: DiscountLine[];
+  totalSavings: {amount: string; currencyCode: string} | null;
+} {
+  type RawAlloc = {
+    discountedAmount?: {amount?: string; currencyCode?: string};
+    title?: string;
+    code?: string;
+  };
+  const raw: RawAlloc[] = [];
+
+  // Line-level allocations
+  const lines: any[] =
+    cart?.lines?.nodes ??
+    (cart?.lines as any)?.edges?.map((e: any) => e.node) ??
+    [];
+  for (const line of lines) {
+    for (const a of (line?.discountAllocations ?? []) as RawAlloc[]) raw.push(a);
+  }
+
+  // Cart-level allocations (automatic discounts based on quantity, etc.)
+  for (const a of ((cart as any)?.discountAllocations ?? []) as RawAlloc[]) raw.push(a);
+
+  if (raw.length === 0) return {breakdown: [], totalSavings: null};
+
+  // Group by label and sum amounts
+  const byLabel = new Map<string, {amount: number; currencyCode: string}>();
+  for (const a of raw) {
+    const label = a.title ?? a.code ?? 'Desconto';
+    const amt = parseFloat(a.discountedAmount?.amount ?? '0');
+    const cur = a.discountedAmount?.currencyCode ?? 'BRL';
+    const existing = byLabel.get(label);
+    if (existing) existing.amount += amt;
+    else byLabel.set(label, {amount: amt, currencyCode: cur});
+  }
+
+  const breakdown: DiscountLine[] = Array.from(byLabel.entries()).map(
+    ([label, {amount, currencyCode}]) => ({label, amount: amount.toFixed(2), currencyCode}),
+  );
+  const totalAmount = breakdown.reduce((s, d) => s + parseFloat(d.amount), 0);
+  return {
+    breakdown,
+    totalSavings: totalAmount > 0
+      ? {amount: totalAmount.toFixed(2), currencyCode: breakdown[0].currencyCode}
+      : null,
+  };
+}
+
 export function CartDetails({
   layout,
   cart,
@@ -58,32 +113,27 @@ export function CartDetails({
   layout: Layouts;
   cart: CartType | null;
 }) {
-  const cartHasItems = !!cart && (cart.totalQuantity > 0 || (cart.lines?.nodes || (cart.lines as any)?.edges || []).length > 0);
+  const cartHasItems =
+    !!cart &&
+    (cart.totalQuantity > 0 ||
+      (cart.lines?.nodes || (cart.lines as any)?.edges || []).length > 0);
   const container = {
     drawer: 'grid grid-cols-1 h-screen-no-nav grid-rows-[1fr_auto]',
     page: 'w-full pb-12 grid md:grid-cols-2 md:items-start gap-8 md:gap-8 lg:gap-12',
   };
 
-  // Calculate total savings from discountAllocations across all lines
-  const lines: any[] = cart?.lines?.nodes ?? (cart?.lines as any)?.edges?.map((e: any) => e.node) ?? [];
-  let totalSavingsAmount = 0;
-  let savingsCurrency = 'BRL';
-  for (const line of lines) {
-    for (const alloc of (line?.discountAllocations ?? [])) {
-      totalSavingsAmount += parseFloat(alloc?.discountedAmount?.amount ?? '0');
-      if (alloc?.discountedAmount?.currencyCode) savingsCurrency = alloc.discountedAmount.currencyCode;
-    }
-  }
-  const totalSavings =
-    totalSavingsAmount > 0
-      ? {amount: totalSavingsAmount.toFixed(2), currencyCode: savingsCurrency}
-      : null;
+  const {breakdown: discountBreakdown, totalSavings} = buildDiscountBreakdown(cart);
 
   return (
     <div className={container[layout]}>
       <CartLines lines={cart?.lines} layout={layout} />
       {cartHasItems && (
-        <CartSummary cost={cart.cost} layout={layout} totalSavings={totalSavings}>
+        <CartSummary
+          cost={cart.cost}
+          layout={layout}
+          totalSavings={totalSavings}
+          discountBreakdown={discountBreakdown}
+        >
           <CartDiscounts discountCodes={cart.discountCodes} />
           <CartCheckoutActions checkoutUrl={cart.checkoutUrl} />
         </CartSummary>
@@ -226,12 +276,14 @@ function CartSummary({
   cost,
   layout,
   totalSavings = null,
+  discountBreakdown = [],
   children = null,
 }: {
   children?: React.ReactNode;
   cost: CartCost;
   layout: Layouts;
   totalSavings?: {amount: string; currencyCode: string} | null;
+  discountBreakdown?: DiscountLine[];
 }) {
   const summary = {
     drawer: 'grid gap-4 p-6 border-t md:px-12',
@@ -244,11 +296,24 @@ function CartSummary({
         Resumo do pedido
       </h2>
       <dl className="grid gap-2">
-        {totalSavings && (
-          <div className="flex items-center justify-between text-green-600 dark:text-green-400">
-            <Text as="dt" className="text-sm font-medium">✂️ Você economizou</Text>
+        {/* Named discount rows (automatic + coupon) */}
+        {discountBreakdown.map((d) => (
+          <div
+            key={d.label}
+            className="flex items-center justify-between text-green-600 dark:text-green-400"
+          >
+            <Text as="dt" className="text-sm font-medium">✂️ {d.label}</Text>
             <Text as="dd" className="text-sm font-semibold">
-              -<Money data={totalSavings as any} />
+              −<Money data={{amount: d.amount, currencyCode: d.currencyCode} as any} />
+            </Text>
+          </div>
+        ))}
+        {/* "Você economizou" summary row only when there are multiple discounts */}
+        {totalSavings && discountBreakdown.length > 1 && (
+          <div className="flex items-center justify-between text-green-600 dark:text-green-400 border-t border-green-100 dark:border-green-900 pt-1 mt-1">
+            <Text as="dt" className="text-xs font-medium opacity-80">Total economizado</Text>
+            <Text as="dd" className="text-xs font-semibold opacity-80">
+              −<Money data={totalSavings as any} />
             </Text>
           </div>
         )}

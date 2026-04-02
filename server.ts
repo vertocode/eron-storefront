@@ -126,6 +126,12 @@ export default {
           note
           attributes { key value }
           discountCodes { applicable code }
+          discountAllocations {
+            discountedAmount { amount currencyCode }
+            ... on CartAutomaticDiscountAllocation { title }
+            ... on CartCodeDiscountAllocation { code }
+            ... on CartCustomDiscountAllocation { title }
+          }
         }
         fragment CartApiMoney on MoneyV2 { currencyCode amount }
         fragment CartApiImage on Image { id url altText width height }
