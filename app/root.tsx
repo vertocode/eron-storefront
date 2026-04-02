@@ -33,6 +33,7 @@ import {seoPayload} from '~/lib/seo.server';
 import styles from '~/styles/app.css?url';
 
 import {DEFAULT_LOCALE, parseMenu} from './lib/utils';
+import {getInventoryBySaoLourenco} from './lib/admin-inventory.server';
 
 export type RootLoader = typeof loader;
 
@@ -127,11 +128,32 @@ async function loadCriticalData({request, context}: LoaderFunctionArgs) {
  * Make sure to not throw any errors here, as it will cause the page to 500.
  */
 function loadDeferredData({context}: LoaderFunctionArgs) {
-  const {cart, customerAccount} = context;
+  const {cart, customerAccount, env} = context;
+
+  // Enrich cart lines with real inventory from São Lourenço (Admin API).
+  // On any error the cart is returned unchanged — badges just won't show.
+  const enrichedCart = (async () => {
+    const cartData = await cart.get();
+    const lines: any[] = cartData?.lines?.nodes ?? [];
+    if (!lines.length) return cartData;
+    const variantIds: string[] = lines
+      .map((l: any) => l?.merchandise?.id)
+      .filter(Boolean);
+    const invMap = await getInventoryBySaoLourenco(env, variantIds);
+    if (invMap.size) {
+      lines.forEach((line: any) => {
+        const qty = invMap.get(line?.merchandise?.id);
+        if (qty !== undefined && line?.merchandise) {
+          line.merchandise.quantityAvailable = qty;
+        }
+      });
+    }
+    return cartData;
+  })();
 
   return {
     isLoggedIn: customerAccount.isLoggedIn(),
-    cart: cart.get(),
+    cart: enrichedCart,
   };
 }
 

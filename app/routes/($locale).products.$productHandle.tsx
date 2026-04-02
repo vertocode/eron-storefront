@@ -39,6 +39,7 @@ import {seoPayload} from '~/lib/seo.server';
 import type {Storefront} from '~/lib/type';
 import {routeHeaders} from '~/data/cache';
 import {MEDIA_FRAGMENT, PRODUCT_CARD_FRAGMENT} from '~/data/fragments';
+import {getInventoryBySaoLourenco} from '~/lib/admin-inventory.server';
 
 export const headers = routeHeaders;
 
@@ -95,6 +96,14 @@ async function loadCriticalData({
     url: request.url,
   });
 
+  // Fetch inventory from Admin API (São Lourenço). Non-blocking: starts here,
+  // runs concurrently with seo computation above, awaited just before return.
+  const variantId = (selectedVariant as any)?.id as string | undefined;
+  const inventoryMap = variantId
+    ? await getInventoryBySaoLourenco(context.env, [variantId])
+    : new Map<string, number>();
+  const quantityAvailable: number | null = inventoryMap.get(variantId ?? '') ?? null;
+
   return {
     product,
     variants,
@@ -102,6 +111,7 @@ async function loadCriticalData({
     storeDomain: shop.primaryDomain.url,
     recommended,
     seo,
+    quantityAvailable,
   };
 }
 
@@ -122,7 +132,7 @@ export const meta = ({matches}: MetaArgs<typeof loader>) => {
 };
 
 export default function Product() {
-  const {product, shop, recommended, variants, storeDomain} =
+  const {product, shop, recommended, variants, storeDomain, quantityAvailable} =
     useLoaderData<typeof loader>();
   const {media, title, vendor, descriptionHtml} = product;
   const {shippingPolicy, refundPolicy} = shop;
@@ -173,6 +183,7 @@ export default function Product() {
                 productOptions={productOptions}
                 selectedVariant={selectedVariant}
                 storeDomain={storeDomain}
+                quantityAvailable={quantityAvailable}
               />
 
               {/* Description inline (not accordion) */}
@@ -242,15 +253,19 @@ export function ProductForm({
   productOptions,
   selectedVariant,
   storeDomain,
+  quantityAvailable: qaFromLoader,
 }: {
   productOptions: MappedProductOptions[];
   selectedVariant: ProductFragment['selectedOrFirstAvailableVariant'];
   storeDomain: string;
+  quantityAvailable?: number | null;
 }) {
   const closeRef = useRef<HTMLButtonElement>(null);
 
   const isOutOfStock = !selectedVariant?.availableForSale;
-  const qty = (selectedVariant as any)?.quantityAvailable as number | null | undefined;
+  // Prefer Admin API quantity (qaFromLoader) over Storefront API field (null in multi-location)
+  const qty: number | null | undefined =
+    qaFromLoader ?? ((selectedVariant as any)?.quantityAvailable as number | null | undefined);
   const isLowStock = !isOutOfStock && qty != null && qty > 0 && qty <= 10;
 
   const isOnSale =

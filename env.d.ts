@@ -29,6 +29,10 @@ declare global {
     PUBLIC_CUSTOMER_ACCOUNT_API_URL: string;
     PUBLIC_CHECKOUT_DOMAIN: string;
     SHOP_ID: string;
+    // Shopify Admin API — needed for real inventory counts (multi-location store)
+    SHOPIFY_ADMIN_CLIENT_ID?: string;
+    SHOPIFY_ADMIN_CLIENT_SECRET?: string;
+    SHOPIFY_ADMIN_DOMAIN?: string; // e.g. "eronfit.myshopify.com"
   }
 }
 
