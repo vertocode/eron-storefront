@@ -75,7 +75,16 @@ export const links: LinksFunction = () => {
       rel: 'preconnect',
       href: 'https://shop.app',
     },
-    {rel: 'icon', type: 'image/svg+xml', href: favicon},
+    {
+      rel: 'icon',
+      type: 'image/png',
+      href: 'https://cdn.shopify.com/s/files/1/0800/2964/7069/files/logo-2-nobg.png?v=1766192249',
+    },
+    {
+      rel: 'icon',
+      type: 'image/svg+xml',
+      href: favicon,
+    },
   ];
 };
 

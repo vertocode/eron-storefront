@@ -1,4 +1,10 @@
 import {useParams, Form, Await, useRouteLoaderData} from '@remix-run/react';
+
+// Logo URLs — hosted on Shopify CDN
+const LOGO_NORMAL =
+  'https://cdn.shopify.com/s/files/1/0800/2964/7069/files/logo-2-nobg.png?v=1766192249';
+const LOGO_INVERSE =
+  'https://cdn.shopify.com/s/files/1/0800/2964/7069/files/logo-inverse-3-removebg-preview.png?v=1766192097';
 import useWindowScroll from 'react-use/esm/useWindowScroll';
 import {Disclosure} from '@headlessui/react';
 import {Suspense, useEffect, useMemo} from 'react';
@@ -88,13 +94,11 @@ function Header({title, menu, footerMenu}: {title: string; menu?: EnhancedMenu; 
       )}
       <DesktopHeader
         isHome={isHome}
-        title={title}
         menu={menu}
         openCart={openCart}
       />
       <MobileHeader
         isHome={isHome}
-        title={title}
         openCart={openCart}
         openMenu={openMenu}
       />
@@ -213,12 +217,10 @@ function MenuMobileNav({
 }
 
 function MobileHeader({
-  title,
   isHome,
   openCart,
   openMenu,
 }: {
-  title: string;
   isHome: boolean;
   openCart: () => void;
   openMenu: () => void;
@@ -269,15 +271,14 @@ function MobileHeader({
       </div>
 
       <Link
-        className="flex items-center self-stretch leading-[3rem] md:leading-[4rem] justify-center flex-grow w-full h-full"
+        className="flex items-center self-stretch justify-center flex-grow w-full h-full"
         to="/"
       >
-        <Heading
-          className="font-bold text-center leading-none"
-          as={isHome ? 'h1' : 'h2'}
-        >
-          {title}
-        </Heading>
+        <img
+          src={isHome ? LOGO_INVERSE : LOGO_NORMAL}
+          alt="Eron Fit"
+          className="h-7 w-auto object-contain"
+        />
       </Link>
 
       <div className="flex items-center justify-end w-full gap-4">
@@ -292,12 +293,10 @@ function DesktopHeader({
   isHome,
   menu,
   openCart,
-  title,
 }: {
   isHome: boolean;
   openCart: () => void;
   menu?: EnhancedMenu;
-  title: string;
 }) {
   const params = useParams();
   const {y} = useWindowScroll();
@@ -313,8 +312,12 @@ function DesktopHeader({
       } hidden h-nav lg:flex items-center sticky transition duration-300 backdrop-blur-lg z-40 top-0 justify-between w-full leading-none gap-8 px-12 py-8`}
     >
       <div className="flex gap-12">
-        <Link className="font-bold" to="/" prefetch="intent">
-          {title}
+        <Link className="flex items-center" to="/" prefetch="intent">
+          <img
+            src={isHome ? LOGO_INVERSE : LOGO_NORMAL}
+            alt="Eron Fit"
+            className="h-8 w-auto object-contain"
+          />
         </Link>
         <nav className="flex gap-8">
           {/* Top level menu items */}
@@ -466,6 +469,16 @@ function Footer({menu}: {menu?: EnhancedMenu}) {
       className={`grid min-h-[25rem] items-start grid-flow-row w-full gap-6 py-8 px-6 md:px-8 lg:px-12 md:gap-8 lg:gap-12 grid-cols-1 md:grid-cols-2 lg:grid-cols-${itemsCount}
         bg-primary dark:bg-contrast dark:text-primary text-contrast overflow-hidden`}
     >
+      {/* Logo — spans full width above menu columns */}
+      <div className={`md:col-span-2 lg:col-span-${itemsCount} pb-2`}>
+        <Link to="/">
+          <img
+            src={LOGO_INVERSE}
+            alt="Eron Fit"
+            className="h-10 w-auto object-contain"
+          />
+        </Link>
+      </div>
       <FooterMenu menu={menu} />
       <div
         className={`self-end pt-8 opacity-50 md:col-span-2 lg:col-span-${itemsCount}`}
