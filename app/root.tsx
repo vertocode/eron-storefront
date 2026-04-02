@@ -194,7 +194,7 @@ function Layout({children}: {children?: React.ReactNode}) {
           >
             <PageLayout
               key={`${locale.language}-${locale.country}`}
-              layout={data.layout}
+              layout={data.layout as any}
             >
               {children}
             </PageLayout>
@@ -248,6 +248,34 @@ export function ErrorBoundary({error}: {error: Error}) {
   );
 }
 
+export type AnnouncementBar = {
+  message: string;
+  link?: string;
+  active: boolean;
+  placement: 'global' | 'cart' | 'both';
+  bgColor?: string;
+  textColor?: string;
+  sortOrder: number;
+};
+
+function parseAnnouncementBars(nodes: Array<{fields: Array<{key: string; value: string | null}>}>): AnnouncementBar[] {
+  return nodes
+    .map((node) => {
+      const f = Object.fromEntries(node.fields.map((x) => [x.key, x.value ?? '']));
+      return {
+        message: f.message ?? '',
+        link: f.link || undefined,
+        active: f.active === 'true',
+        placement: (f.placement || 'global') as AnnouncementBar['placement'],
+        bgColor: f.bg_color || undefined,
+        textColor: f.text_color || undefined,
+        sortOrder: parseInt(f.sort_order || '0', 10),
+      };
+    })
+    .filter((b) => b.active && b.message)
+    .sort((a, b) => a.sortOrder - b.sortOrder);
+}
+
 const LAYOUT_QUERY = `#graphql
   query layout(
     $language: LanguageCode
@@ -262,6 +290,11 @@ const LAYOUT_QUERY = `#graphql
     }
     footerMenu: menu(handle: $footerMenuHandle) {
       ...Menu
+    }
+    announcementBars: metaobjects(type: "announcement_bar", first: 20) {
+      nodes {
+        fields { key value }
+      }
     }
   }
   fragment Shop on Shop {
@@ -343,5 +376,9 @@ async function getLayoutData({storefront, env}: AppLoadContext) {
       )
     : undefined;
 
-  return {shop: data.shop, headerMenu, footerMenu};
+  const announcementBars = parseAnnouncementBars(
+    (data as any)?.announcementBars?.nodes ?? [],
+  );
+
+  return {shop: data.shop, headerMenu, footerMenu, announcementBars};
 }

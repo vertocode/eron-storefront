@@ -7,7 +7,7 @@ const LOGO_INVERSE =
   'https://cdn.shopify.com/s/files/1/0800/2964/7069/files/logo-inverse-3-removebg-preview.png?v=1766192097';
 import useWindowScroll from 'react-use/esm/useWindowScroll';
 import {Disclosure} from '@headlessui/react';
-import {Suspense, useEffect, useMemo} from 'react';
+import {Suspense, useEffect, useMemo, useState} from 'react';
 import {CartForm} from '@shopify/hydrogen';
 
 import {type LayoutQuery} from 'storefrontapi.generated';
@@ -31,26 +31,78 @@ import {
 } from '~/lib/utils';
 import {useIsHydrated} from '~/hooks/useIsHydrated';
 import {useCartFetchers} from '~/hooks/useCartFetchers';
-import type {RootLoader} from '~/root';
+import type {RootLoader, AnnouncementBar} from '~/root';
 
 type LayoutProps = {
   children: React.ReactNode;
   layout?: LayoutQuery & {
     headerMenu?: EnhancedMenu | null;
     footerMenu?: EnhancedMenu | null;
+    announcementBars?: AnnouncementBar[];
   };
 };
 
+/** Cycles through multiple announcement bars with a fade animation. */
+function AnnouncementBarBand({bars}: {bars: AnnouncementBar[]}) {
+  const [index, setIndex] = useState(0);
+  const [visible, setVisible] = useState(true);
+
+  useEffect(() => {
+    if (bars.length <= 1) return;
+    const id = setInterval(() => {
+      setVisible(false);
+      setTimeout(() => {
+        setIndex((i) => (i + 1) % bars.length);
+        setVisible(true);
+      }, 300);
+    }, 5000);
+    return () => clearInterval(id);
+  }, [bars.length]);
+
+  const bar = bars[index];
+  if (!bar) return null;
+
+  const style: React.CSSProperties = {
+    backgroundColor: bar.bgColor ?? '#000',
+    color: bar.textColor ?? '#fff',
+  };
+
+  const isAbsolute = bar.link?.startsWith('http');
+
+  return (
+    <div
+      style={style}
+      className={`w-full py-2.5 transition-opacity duration-300 ${visible ? 'opacity-100' : 'opacity-0'}`}
+    >
+      {bar.link ? (
+        isAbsolute ? (
+          <a href={bar.link} className="block hover:opacity-80 transition-opacity">
+            <p className="text-xs sm:text-sm font-medium text-center px-4 leading-snug">{bar.message}</p>
+          </a>
+        ) : (
+          <Link to={bar.link} className="block hover:opacity-80 transition-opacity">
+            <p className="text-xs sm:text-sm font-medium text-center px-4 leading-snug">{bar.message}</p>
+          </Link>
+        )
+      ) : (
+        <p className="text-xs sm:text-sm font-medium text-center px-4 leading-snug">{bar.message}</p>
+      )}
+    </div>
+  );
+}
+
 export function PageLayout({children, layout}: LayoutProps) {
-  const {headerMenu, footerMenu} = layout || {};
+  const {headerMenu, footerMenu, announcementBars = []} = layout || {};
+  const globalBars = announcementBars.filter(
+    (b) => b.placement === 'global' || b.placement === 'both',
+  );
   return (
     <>
       <div className="flex flex-col min-h-screen">
-        <div className="">
-          <a href="#mainContent" className="sr-only">
-            Ir para o conteúdo
-          </a>
-        </div>
+        <a href="#mainContent" className="sr-only">
+          Ir para o conteúdo
+        </a>
+        {globalBars.length > 0 && <AnnouncementBarBand bars={globalBars} />}
         {headerMenu && layout?.shop.name && (
           <Header title={layout.shop.name} menu={headerMenu} footerMenu={footerMenu ?? undefined} />
         )}
@@ -110,9 +162,40 @@ function CartDrawer({isOpen, onClose}: {isOpen: boolean; onClose: () => void}) {
   const rootData = useRouteLoaderData<RootLoader>('root');
   if (!rootData) return null;
 
+  const cartBars: AnnouncementBar[] = (
+    (rootData as any)?.layout?.announcementBars ?? []
+  ).filter((b: AnnouncementBar) => b.placement === 'cart' || b.placement === 'both');
+
   return (
     <Drawer open={isOpen} onClose={onClose} heading="Carrinho" openFrom="right">
       <div className="grid">
+        {cartBars.map((bar, i) => {
+          const isAbs = bar.link?.startsWith('http');
+          return (
+            <div
+              key={i}
+              style={{
+                backgroundColor: bar.bgColor ?? '#16a34a',
+                color: bar.textColor ?? '#fff',
+              }}
+              className="py-2.5 px-4"
+            >
+              {bar.link ? (
+                isAbs ? (
+                  <a href={bar.link} className="block hover:opacity-80 transition-opacity">
+                    <p className="text-xs font-medium text-center">{bar.message}</p>
+                  </a>
+                ) : (
+                  <Link to={bar.link} className="block hover:opacity-80 transition-opacity">
+                    <p className="text-xs font-medium text-center">{bar.message}</p>
+                  </Link>
+                )
+              ) : (
+                <p className="text-xs font-medium text-center">{bar.message}</p>
+              )}
+            </div>
+          );
+        })}
         <Suspense fallback={<CartLoading />}>
           <Await
             resolve={rootData?.cart}
@@ -232,11 +315,7 @@ function MobileHeader({
   return (
     <header
       role="banner"
-      className={`${
-        isHome
-          ? 'bg-primary/80 dark:bg-contrast/60 text-contrast dark:text-primary shadow-darkHeader'
-          : 'bg-contrast/80 text-primary'
-      } flex lg:hidden items-center h-nav sticky backdrop-blur-lg z-40 top-0 justify-between w-full leading-none gap-4 px-4 md:px-8`}
+      className="bg-contrast/80 text-primary flex lg:hidden items-center h-nav sticky backdrop-blur-lg z-40 top-0 justify-between w-full leading-none gap-4 px-4 md:px-8"
     >
       <div className="flex items-center justify-start w-full gap-4">
         <button
@@ -257,11 +336,7 @@ function MobileHeader({
             <IconSearch />
           </button>
           <Input
-            className={
-              isHome
-                ? 'focus:border-contrast/20 dark:focus:border-primary/20'
-                : 'focus:border-primary/20'
-            }
+            className="focus:border-primary/20"
             type="search"
             variant="minisearch"
             placeholder="Buscar"
@@ -275,7 +350,7 @@ function MobileHeader({
         to="/"
       >
         <img
-          src={isHome ? LOGO_INVERSE : LOGO_NORMAL}
+          src={LOGO_NORMAL}
           alt="Eron Fit"
           className="h-7 w-auto object-contain"
         />
@@ -283,7 +358,7 @@ function MobileHeader({
 
       <div className="flex items-center justify-end w-full gap-4">
         <AccountLink className="relative flex items-center justify-center w-8 h-8" />
-        <CartCount isHome={isHome} openCart={openCart} />
+        <CartCount isHome={false} openCart={openCart} />
       </div>
     </header>
   );
