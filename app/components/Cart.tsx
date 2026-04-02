@@ -64,11 +64,26 @@ export function CartDetails({
     page: 'w-full pb-12 grid md:grid-cols-2 md:items-start gap-8 md:gap-8 lg:gap-12',
   };
 
+  // Calculate total savings from discountAllocations across all lines
+  const lines: any[] = cart?.lines?.nodes ?? (cart?.lines as any)?.edges?.map((e: any) => e.node) ?? [];
+  let totalSavingsAmount = 0;
+  let savingsCurrency = 'BRL';
+  for (const line of lines) {
+    for (const alloc of (line?.discountAllocations ?? [])) {
+      totalSavingsAmount += parseFloat(alloc?.discountedAmount?.amount ?? '0');
+      if (alloc?.discountedAmount?.currencyCode) savingsCurrency = alloc.discountedAmount.currencyCode;
+    }
+  }
+  const totalSavings =
+    totalSavingsAmount > 0
+      ? {amount: totalSavingsAmount.toFixed(2), currencyCode: savingsCurrency}
+      : null;
+
   return (
     <div className={container[layout]}>
       <CartLines lines={cart?.lines} layout={layout} />
       {cartHasItems && (
-        <CartSummary cost={cart.cost} layout={layout}>
+        <CartSummary cost={cart.cost} layout={layout} totalSavings={totalSavings}>
           <CartDiscounts discountCodes={cart.discountCodes} />
           <CartCheckoutActions checkoutUrl={cart.checkoutUrl} />
         </CartSummary>
@@ -210,11 +225,13 @@ function CartCheckoutActions({checkoutUrl}: {checkoutUrl: string}) {
 function CartSummary({
   cost,
   layout,
+  totalSavings = null,
   children = null,
 }: {
   children?: React.ReactNode;
   cost: CartCost;
   layout: Layouts;
+  totalSavings?: {amount: string; currencyCode: string} | null;
 }) {
   const summary = {
     drawer: 'grid gap-4 p-6 border-t md:px-12',
@@ -226,9 +243,17 @@ function CartSummary({
       <h2 id="summary-heading" className="sr-only">
         Resumo do pedido
       </h2>
-      <dl className="grid">
+      <dl className="grid gap-2">
+        {totalSavings && (
+          <div className="flex items-center justify-between text-green-600 dark:text-green-400">
+            <Text as="dt" className="text-sm font-medium">✂️ Você economizou</Text>
+            <Text as="dd" className="text-sm font-semibold">
+              -<Money data={totalSavings as any} />
+            </Text>
+          </div>
+        )}
         <div className="flex items-center justify-between font-medium">
-          <Text as="dt">Subtotal</Text>
+          <Text as="dt">{totalSavings ? 'Total com desconto' : 'Subtotal'}</Text>
           <Text as="dd" data-test="subtotal">
             {cost?.subtotalAmount?.amount ? (
               <Money data={cost?.subtotalAmount} />
@@ -260,6 +285,24 @@ function CartLineItem({line}: {line: CartLine}) {
 
   const isOutOfStock = (merchandise as any).availableForSale === false;
   const quantityAvailable = (merchandise as any).quantityAvailable as number | null | undefined;
+
+  // Discount allocations (coupon + automatic)
+  const discountAllocations: Array<{
+    discountedAmount: {amount: string; currencyCode: string};
+    title?: string;
+    code?: string;
+  }> = (line as any).discountAllocations ?? [];
+  const lineDiscountTotal = discountAllocations.reduce(
+    (sum, d) => sum + parseFloat(d.discountedAmount?.amount ?? '0'),
+    0,
+  );
+  const hasLineDiscount = lineDiscountTotal > 0;
+  const originalLineTotal = hasLineDiscount
+    ? ({
+        amount: (parseFloat(line.cost.totalAmount.amount) + lineDiscountTotal).toFixed(2),
+        currencyCode: line.cost.totalAmount.currencyCode,
+      } as any)
+    : null;
   // Show urgency when <= 10 units left (and not already OOS)
   const isLowStock =
     !isOutOfStock &&
@@ -351,9 +394,24 @@ function CartLineItem({line}: {line: CartLine}) {
             </div>
           )}
         </div>
-        <Text>
-          <CartLinePrice line={line} as="span" />
-        </Text>
+        <div className="flex flex-col items-end gap-0.5">
+          {hasLineDiscount && originalLineTotal && (
+            <span className="text-xs text-primary/40 line-through leading-tight">
+              <Money withoutTrailingZeros data={originalLineTotal} />
+            </span>
+          )}
+          <span className={hasLineDiscount ? 'text-green-600 dark:text-green-400 font-semibold' : ''}>
+            <CartLinePrice line={line} as="span" />
+          </span>
+          {discountAllocations.map((d, i) => (
+            <span
+              key={i}
+              className="text-[10px] font-medium text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 px-1.5 py-0.5 rounded leading-tight"
+            >
+              {d.title ?? d.code ?? 'Desconto'} −<Money withoutTrailingZeros data={d.discountedAmount as any} />
+            </span>
+          ))}
+        </div>
       </div>
     </li>
   );
