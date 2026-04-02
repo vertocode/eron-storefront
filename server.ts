@@ -65,11 +65,71 @@ export default {
         shopId: env.SHOP_ID,
       });
 
+      // Override default cart fragment: Hydrogen's default uses `edges { node {} }`
+      // but `useOptimisticCart` reads `lines.nodes` — causing a crash on 2nd add-to-cart.
+      const CART_FRAGMENT = `#graphql
+        fragment CartApiQuery on Cart {
+          updatedAt
+          id
+          checkoutUrl
+          totalQuantity
+          buyerIdentity {
+            countryCode
+            customer {
+              id
+              email
+              firstName
+              lastName
+              displayName
+            }
+            email
+            phone
+          }
+          lines(first: $numCartLines) {
+            nodes {
+              id
+              quantity
+              attributes { key value }
+              cost {
+                totalAmount { amount currencyCode }
+                amountPerQuantity { amount currencyCode }
+                compareAtAmountPerQuantity { amount currencyCode }
+              }
+              merchandise {
+                ... on ProductVariant {
+                  id
+                  availableForSale
+                  compareAtPrice { ...CartApiMoney }
+                  price { ...CartApiMoney }
+                  requiresShipping
+                  title
+                  image { ...CartApiImage }
+                  product { handle title id vendor }
+                  selectedOptions { name value }
+                }
+              }
+            }
+          }
+          cost {
+            subtotalAmount { ...CartApiMoney }
+            totalAmount { ...CartApiMoney }
+            totalDutyAmount { ...CartApiMoney }
+            totalTaxAmount { ...CartApiMoney }
+          }
+          note
+          attributes { key value }
+          discountCodes { applicable code }
+        }
+        fragment CartApiMoney on MoneyV2 { currencyCode amount }
+        fragment CartApiImage on Image { id url altText width height }
+      `;
+
       const cart = createCartHandler({
         storefront,
         customerAccount,
         getCartId: cartGetIdDefault(request.headers),
         setCartId: cartSetIdDefault(),
+        cartFragment: CART_FRAGMENT,
       });
 
       /**

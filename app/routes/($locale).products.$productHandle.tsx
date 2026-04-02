@@ -509,7 +509,7 @@ function ProductPrice({
     selectedVariant.price.amount < selectedVariant.compareAtPrice.amount;
 
   return (
-    <div className="flex items-center gap-3 mt-1">
+    <div className="flex items-center gap-3 mt-1" data-test="price">
       <Money
         withoutTrailingZeros
         data={selectedVariant.price!}

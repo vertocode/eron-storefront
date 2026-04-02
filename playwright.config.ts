@@ -65,35 +65,24 @@ let config: PlaywrightTestConfig = defineConfig({
   },
 });
 
-if (process.env.URL) {
-  const use = {
-    ...config.use,
-    baseURL: process.env.URL,
-  };
+const BASE_URL = process.env.URL ?? 'https://eronfit.com';
 
-  if (process.env.AUTH_BYPASS_TOKEN) {
-    use.extraHTTPHeaders = {
-      'oxygen-auth-bypass-token': process.env.AUTH_BYPASS_TOKEN,
-    };
-  }
-
-  config = {
-    ...config,
-    use,
-  };
-} else {
-  config = {
-    ...config,
-    use: {
-      ...config.use,
-      baseURL: 'http://localhost:3000',
-    },
-    /* Run your local dev server before starting the tests */
-    webServer: {
-      command: 'npm run preview',
-      port: 3000,
-    },
-  };
+const extraHeaders: Record<string, string> = {};
+if (process.env.AUTH_BYPASS_TOKEN) {
+  extraHeaders['oxygen-auth-bypass-token'] = process.env.AUTH_BYPASS_TOKEN;
 }
+
+config = {
+  ...config,
+  use: {
+    ...config.use,
+    baseURL: BASE_URL,
+    extraHTTPHeaders: Object.keys(extraHeaders).length ? extraHeaders : undefined,
+  },
+  // Only spin up a local server when explicitly targeting localhost
+  webServer: BASE_URL.includes('localhost')
+    ? {command: 'npm run preview', port: 3000}
+    : undefined,
+};
 
 export default config;
