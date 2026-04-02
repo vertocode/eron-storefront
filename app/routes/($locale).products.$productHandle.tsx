@@ -25,7 +25,7 @@ import type {
   ProductOptionValueSwatch,
 } from '@shopify/hydrogen/storefront-api-types';
 
-import type {ProductFragment} from 'storefrontapi.generated';
+import type {ProductFragment, ProductCardFragment} from 'storefrontapi.generated';
 import {Heading, Section, Text} from '~/components/Text';
 import {Link} from '~/components/Link';
 import {Button} from '~/components/Button';
@@ -231,7 +231,7 @@ export default function Product() {
           resolve={recommended}
         >
           {(products) => (
-            <ProductSwimlane title="Produtos Relacionados" products={products} />
+            <ProductSwimlane title="Produtos Relacionados" products={products as {nodes: ProductCardFragment[]}} />
           )}
         </Await>
       </Suspense>
@@ -769,15 +769,15 @@ async function getRecommendedProducts(
 
   invariant(products, 'No data returned from Shopify API');
 
-  const mergedProducts = (products.recommended ?? [])
-    .concat(products.additional.nodes)
+  const mergedProducts = ((products.recommended ?? []) as ProductCardFragment[])
+    .concat(products.additional.nodes as ProductCardFragment[])
     .filter(
-      (value, index, array) =>
-        array.findIndex((value2) => value2.id === value.id) === index,
+      (value: ProductCardFragment, index: number, array: ProductCardFragment[]) =>
+        array.findIndex((value2: ProductCardFragment) => value2.id === value.id) === index,
     );
 
   const originalProduct = mergedProducts.findIndex(
-    (item) => item.id === productId,
+    (item: ProductCardFragment) => item.id === productId,
   );
 
   mergedProducts.splice(originalProduct, 1);

@@ -24,7 +24,7 @@ import {PageHeader, Section, Text} from '~/components/Text';
 import {Grid} from '~/components/Grid';
 import {Button} from '~/components/Button';
 import {ProductCard} from '~/components/ProductCard';
-import {SortFilter, type SortParam} from '~/components/SortFilter';
+import {SortFilter, type SortParam, type AppliedFilter} from '~/components/SortFilter';
 import {PRODUCT_CARD_FRAGMENT} from '~/data/fragments';
 import {routeHeaders} from '~/data/cache';
 import {seoPayload} from '~/lib/seo.server';
@@ -83,12 +83,12 @@ export async function loader({params, request, context}: LoaderFunctionArgs) {
   const seo = seoPayload.collection({collection, url: request.url});
 
   const allFilterValues = collection.products.filters.flatMap(
-    (filter) => filter.values,
+    (filter: Filter) => filter.values,
   );
 
   const appliedFilters = filters
     .map((filter) => {
-      const foundValue = allFilterValues.find((value) => {
+      const foundValue = allFilterValues.find((value: Filter['values'][number]) => {
         const valueInput = JSON.parse(value.input as string) as ProductFilter;
         // special case for price, the user can enter something freeform (still a number, though)
         // that may not make sense for the locale/currency.
@@ -163,8 +163,8 @@ export default function Collection() {
       <Section>
         <SortFilter
           filters={collection.products.filters as Filter[]}
-          appliedFilters={appliedFilters}
-          collections={collections}
+          appliedFilters={appliedFilters as AppliedFilter[]}
+          collections={collections as Array<{handle: string; title: string}>}
         >
           <Pagination connection={collection.products}>
             {({

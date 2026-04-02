@@ -46,7 +46,7 @@ export function PageLayout({children, layout}: LayoutProps) {
           </a>
         </div>
         {headerMenu && layout?.shop.name && (
-          <Header title={layout.shop.name} menu={headerMenu} footerMenu={footerMenu} />
+          <Header title={layout.shop.name} menu={headerMenu} footerMenu={footerMenu ?? undefined} />
         )}
         <main role="main" id="mainContent" className="flex-grow">
           {children}
