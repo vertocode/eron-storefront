@@ -96,13 +96,18 @@ async function loadCriticalData({
     url: request.url,
   });
 
-  // Fetch inventory from Admin API (São Lourenço). Non-blocking: starts here,
-  // runs concurrently with seo computation above, awaited just before return.
-  const variantId = (selectedVariant as any)?.id as string | undefined;
-  const inventoryMap = variantId
-    ? await getInventoryBySaoLourenco(context.env, [variantId])
+  // Fetch inventory for ALL product variants at once from Admin API (São Lourenço).
+  // Returning a full map so ProductForm can look up any variant instantly —
+  // even during useOptimisticVariant transitions before the next loader completes.
+  const allVariantIds: string[] = (product as any).variants?.nodes
+    ?.map((v: any) => v.id as string)
+    .filter(Boolean) ?? [];
+  const inventoryMap = allVariantIds.length
+    ? await getInventoryBySaoLourenco(context.env, allVariantIds)
     : new Map<string, number>();
-  const quantityAvailable: number | null = inventoryMap.get(variantId ?? '') ?? null;
+  // Convert to plain object for serialisation through the Remix loader boundary
+  const variantInventory: Record<string, number> = {};
+  inventoryMap.forEach((qty, id) => { variantInventory[id] = qty; });
 
   return {
     product,
@@ -111,7 +116,7 @@ async function loadCriticalData({
     storeDomain: shop.primaryDomain.url,
     recommended,
     seo,
-    quantityAvailable,
+    variantInventory,
   };
 }
 
@@ -132,7 +137,7 @@ export const meta = ({matches}: MetaArgs<typeof loader>) => {
 };
 
 export default function Product() {
-  const {product, shop, recommended, variants, storeDomain, quantityAvailable} =
+  const {product, shop, recommended, variants, storeDomain, variantInventory} =
     useLoaderData<typeof loader>();
   const {media, title, vendor, descriptionHtml} = product;
   const {shippingPolicy, refundPolicy} = shop;
@@ -183,7 +188,7 @@ export default function Product() {
                 productOptions={productOptions}
                 selectedVariant={selectedVariant}
                 storeDomain={storeDomain}
-                quantityAvailable={quantityAvailable}
+                variantInventory={variantInventory}
               />
 
               {/* Description inline (not accordion) */}
@@ -253,20 +258,24 @@ export function ProductForm({
   productOptions,
   selectedVariant,
   storeDomain,
-  quantityAvailable: qaFromLoader,
+  variantInventory = {},
 }: {
   productOptions: MappedProductOptions[];
   selectedVariant: ProductFragment['selectedOrFirstAvailableVariant'];
   storeDomain: string;
-  quantityAvailable?: number | null;
+  variantInventory?: Record<string, number>;
 }) {
   const closeRef = useRef<HTMLButtonElement>(null);
 
   const isOutOfStock = !selectedVariant?.availableForSale;
-  // Prefer Admin API quantity (qaFromLoader) over Storefront API field (null in multi-location)
-  const qty: number | null | undefined =
-    qaFromLoader ?? ((selectedVariant as any)?.quantityAvailable as number | null | undefined);
-  const isLowStock = !isOutOfStock && qty != null && qty > 0 && qty <= 10;
+  // Look up inventory for the CURRENT selected variant — works instantly
+  // even during useOptimisticVariant transitions (all variants loaded upfront).
+  const variantId = (selectedVariant as any)?.id as string | undefined;
+  const qty: number | null =
+    variantId !== undefined && variantId in variantInventory
+      ? variantInventory[variantId]
+      : null;
+  const isLowStock = !isOutOfStock && qty !== null && qty > 0 && qty <= 10;
 
   const isOnSale =
     selectedVariant?.price?.amount &&
@@ -677,6 +686,11 @@ const PRODUCT_FRAGMENT = `#graphql
     }
     adjacentVariants (selectedOptions: $selectedOptions) {
       ...ProductVariant
+    }
+    variants(first: 100) {
+      nodes {
+        id
+      }
     }
     seo {
       description
