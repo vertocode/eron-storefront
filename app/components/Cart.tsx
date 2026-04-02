@@ -373,9 +373,14 @@ function CartLineItem({line}: {line: CartLine}) {
             <div className="flex items-center gap-1.5 text-xs font-semibold text-amber-600 dark:text-amber-400">
               <span>⚡</span>
               <span>
-                {atStockLimit
-                  ? `Você tem ${quantityAvailable === 1 ? 'a última unidade' : `as últimas ${quantityAvailable} unidades`}! Finalize logo.`
-                  : `Apenas ${quantityAvailable} ${quantityAvailable === 1 ? 'unidade restante' : 'unidades restantes'} — finalize antes que esgote!`}
+                {(() => {
+                  const opts = (merchandise?.selectedOptions || [])
+                    .filter((o) => o.value && o.value !== 'Default Title')
+                    .map((o) => `${o.name.toLowerCase()} ${o.value}`)
+                    .join(', ');
+                  const qty = `Apenas ${quantityAvailable} ${quantityAvailable === 1 ? 'unidade disponível' : 'unidades disponíveis'}`;
+                  return opts ? `${qty} para ${opts}` : qty;
+                })()}
               </span>
             </div>
           )}

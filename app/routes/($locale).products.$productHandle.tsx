@@ -463,8 +463,14 @@ export function ProductForm({
             <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 text-amber-700 dark:text-amber-300 text-sm font-medium">
               <span>⚡</span>
               <span>
-                Apenas {qty} {qty === 1 ? 'unidade disponível' : 'unidades disponíveis'}
-                {qty! <= 3 ? ' — quase esgotado!' : '!'}
+                {(() => {
+                  const opts = (selectedVariant?.selectedOptions || [])
+                    .filter((o: {name: string; value: string}) => o.value && o.value !== 'Default Title')
+                    .map((o: {name: string; value: string}) => `${o.name.toLowerCase()} ${o.value}`)
+                    .join(', ');
+                  const base = `Apenas ${qty} ${qty === 1 ? 'unidade disponível' : 'unidades disponíveis'}`;
+                  return opts ? `${base} para ${opts}` : base;
+                })()}
               </span>
             </div>
           )}
