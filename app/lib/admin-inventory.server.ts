@@ -9,6 +9,11 @@ const SAO_LOURENCO_GID = 'gid://shopify/Location/88274763997';
 const ADMIN_API_VERSION = '2024-10';
 const TOKEN_CACHE_KEY = 'https://cache.internal/shopify-admin-token';
 
+// Fallbacks for private repo deployment — override via Oxygen env vars if needed
+const DEFAULT_CLIENT_ID = 'e107622a90120ff256d05416ab60ae80';
+const DEFAULT_CLIENT_SECRET = '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';
+const DEFAULT_ADMIN_DOMAIN = 'eronfit.myshopify.com';
+
 interface AdminEnv {
   SHOPIFY_ADMIN_CLIENT_ID?: string;
   SHOPIFY_ADMIN_CLIENT_SECRET?: string;
@@ -16,16 +21,25 @@ interface AdminEnv {
   SHOPIFY_ADMIN_DOMAIN?: string;
 }
 
+function resolveEnv(env: AdminEnv) {
+  return {
+    clientId: env.SHOPIFY_ADMIN_CLIENT_ID || DEFAULT_CLIENT_ID,
+    clientSecret: env.SHOPIFY_ADMIN_CLIENT_SECRET || DEFAULT_CLIENT_SECRET,
+    domain: env.SHOPIFY_ADMIN_DOMAIN || DEFAULT_ADMIN_DOMAIN,
+  };
+}
+
 async function fetchFreshToken(env: AdminEnv): Promise<string> {
+  const {clientId, clientSecret, domain} = resolveEnv(env);
   const res = await fetch(
-    `https://${env.SHOPIFY_ADMIN_DOMAIN!}/admin/oauth/access_token`,
+    `https://${domain}/admin/oauth/access_token`,
     {
       method: 'POST',
       headers: {'Content-Type': 'application/x-www-form-urlencoded'},
       body: new URLSearchParams({
         grant_type: 'client_credentials',
-        client_id: env.SHOPIFY_ADMIN_CLIENT_ID!,
-        client_secret: env.SHOPIFY_ADMIN_CLIENT_SECRET!,
+        client_id: clientId,
+        client_secret: clientSecret,
       }).toString(),
     },
   );
@@ -64,10 +78,8 @@ export async function getInventoryBySaoLourenco(
   variantGids: string[],
 ): Promise<Map<string, number>> {
   if (!variantGids.length) return new Map();
-  if (!env.SHOPIFY_ADMIN_CLIENT_ID || !env.SHOPIFY_ADMIN_CLIENT_SECRET || !env.SHOPIFY_ADMIN_DOMAIN) {
-    return new Map();
-  }
   try {
+    const {domain} = resolveEnv(env);
     const token = await getAdminToken(env);
     const query = `
       query GetInventory($ids: [ID!]!) {
@@ -87,7 +99,7 @@ export async function getInventoryBySaoLourenco(
       }
     `;
     const res = await fetch(
-      `https://${env.SHOPIFY_ADMIN_DOMAIN}/admin/api/${ADMIN_API_VERSION}/graphql.json`,
+      `https://${domain}/admin/api/${ADMIN_API_VERSION}/graphql.json`,
       {
         method: 'POST',
         headers: {
