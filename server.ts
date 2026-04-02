@@ -99,6 +99,7 @@ export default {
                 ... on ProductVariant {
                   id
                   availableForSale
+                  quantityAvailable
                   compareAtPrice { ...CartApiMoney }
                   price { ...CartApiMoney }
                   requiresShipping

@@ -250,6 +250,8 @@ export function ProductForm({
   const closeRef = useRef<HTMLButtonElement>(null);
 
   const isOutOfStock = !selectedVariant?.availableForSale;
+  const qty = (selectedVariant as any)?.quantityAvailable as number | null | undefined;
+  const isLowStock = !isOutOfStock && qty != null && qty > 0 && qty <= 10;
 
   const isOnSale =
     selectedVariant?.price?.amount &&
@@ -433,6 +435,15 @@ export function ProductForm({
       {/* Add to cart */}
       {selectedVariant && (
         <div className="grid items-stretch gap-3 pt-2">
+          {isLowStock && (
+            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 text-amber-700 dark:text-amber-300 text-sm font-medium">
+              <span>⚡</span>
+              <span>
+                Apenas {qty} {qty === 1 ? 'unidade disponível' : 'unidades disponíveis'}
+                {qty! <= 3 ? ' — quase esgotado!' : '!'}
+              </span>
+            </div>
+          )}
           {isOutOfStock ? (
             <Button variant="secondary" disabled className="rounded-lg py-3">
               <Text>Esgotado</Text>
@@ -586,6 +597,7 @@ const PRODUCT_VARIANT_FRAGMENT = `#graphql
   fragment ProductVariant on ProductVariant {
     id
     availableForSale
+    quantityAvailable
     selectedOptions {
       name
       value

@@ -259,6 +259,15 @@ function CartLineItem({line}: {line: CartLine}) {
   if (typeof quantity === 'undefined' || !merchandise?.product) return null;
 
   const isOutOfStock = (merchandise as any).availableForSale === false;
+  const quantityAvailable = (merchandise as any).quantityAvailable as number | null | undefined;
+  // Show urgency when <= 10 units left (and not already OOS)
+  const isLowStock =
+    !isOutOfStock &&
+    quantityAvailable != null &&
+    quantityAvailable > 0 &&
+    quantityAvailable <= 10;
+  const atStockLimit =
+    quantityAvailable != null && quantity >= quantityAvailable;
 
   return (
     <li
@@ -317,11 +326,25 @@ function CartLineItem({line}: {line: CartLine}) {
             </div>
           )}
 
+          {isLowStock && (
+            <div className="flex items-center gap-1.5 text-xs font-semibold text-amber-600 dark:text-amber-400">
+              <span>⚡</span>
+              <span>
+                {atStockLimit
+                  ? `Você tem ${quantityAvailable === 1 ? 'a última unidade' : `as últimas ${quantityAvailable} unidades`}! Finalize logo.`
+                  : `Apenas ${quantityAvailable} ${quantityAvailable === 1 ? 'unidade restante' : 'unidades restantes'} — finalize antes que esgote!`}
+              </span>
+            </div>
+          )}
+
           {!isOptimistic && (
             <div className="flex items-center gap-2">
               {!isOutOfStock && (
                 <div className="flex justify-start text-copy">
-                  <CartLineQuantityAdjust line={line} />
+                  <CartLineQuantityAdjust
+                    line={line}
+                    quantityAvailable={quantityAvailable ?? undefined}
+                  />
                 </div>
               )}
               <ItemRemoveButton lineId={id} />
@@ -357,7 +380,13 @@ function ItemRemoveButton({lineId}: {lineId: CartLine['id']}) {
   );
 }
 
-function CartLineQuantityAdjust({line}: {line: CartLine}) {
+function CartLineQuantityAdjust({
+  line,
+  quantityAvailable,
+}: {
+  line: CartLine;
+  quantityAvailable?: number;
+}) {
   const optimisticId = line?.id;
   const optimisticData = useOptimisticData<OptimisticData>(optimisticId);
 
@@ -369,8 +398,11 @@ function CartLineQuantityAdjust({line}: {line: CartLine}) {
   const prevQuantity = Number(Math.max(0, optimisticQuantity - 1).toFixed(0));
   const nextQuantity = Number((optimisticQuantity + 1).toFixed(0));
 
+  const atStockLimit =
+    quantityAvailable != null && optimisticQuantity >= quantityAvailable;
+
   return (
-    <>
+    <div className="flex flex-col gap-1">
       <label htmlFor={`quantity-${lineId}`} className="sr-only">
         Quantidade, {optimisticQuantity}
       </label>
@@ -397,20 +429,28 @@ function CartLineQuantityAdjust({line}: {line: CartLine}) {
 
         <UpdateCartButton lines={[{id: lineId, quantity: nextQuantity}]}>
           <button
-            className="w-10 h-10 transition text-primary/50 hover:text-primary"
+            className="w-10 h-10 transition text-primary/50 hover:text-primary disabled:text-primary/20 disabled:cursor-not-allowed"
             name="increase-quantity"
             value={nextQuantity}
             aria-label="Aumentar quantidade"
+            disabled={atStockLimit}
           >
             <span>&#43;</span>
-            <OptimisticInput
-              id={optimisticId}
-              data={{quantity: nextQuantity}}
-            />
+            {!atStockLimit && (
+              <OptimisticInput
+                id={optimisticId}
+                data={{quantity: nextQuantity}}
+              />
+            )}
           </button>
         </UpdateCartButton>
       </div>
-    </>
+      {atStockLimit && (
+        <p className="text-[11px] text-amber-600 dark:text-amber-400 font-medium leading-tight">
+          Estoque máximo atingido
+        </p>
+      )}
+    </div>
   );
 }
 
