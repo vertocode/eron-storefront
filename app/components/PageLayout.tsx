@@ -158,44 +158,46 @@ function Header({title, menu, footerMenu}: {title: string; menu?: EnhancedMenu; 
   );
 }
 
+/** Renders a single cart announcement bar. */
+function CartAnnouncementBar({bar}: {bar: AnnouncementBar}) {
+  const isAbs = bar.link?.startsWith('http');
+  const inner = <p className="text-xs font-medium text-center">{bar.message}</p>;
+  return (
+    <div
+      style={{backgroundColor: bar.bgColor ?? '#16a34a', color: bar.textColor ?? '#fff'}}
+      className="py-2.5 px-4 transition-all duration-500"
+    >
+      {bar.link ? (
+        isAbs ? (
+          <a href={bar.link} className="block hover:opacity-80 transition-opacity">{inner}</a>
+        ) : (
+          <Link to={bar.link} className="block hover:opacity-80 transition-opacity">{inner}</Link>
+        )
+      ) : inner}
+    </div>
+  );
+}
+
 function CartDrawer({isOpen, onClose}: {isOpen: boolean; onClose: () => void}) {
   const rootData = useRouteLoaderData<RootLoader>('root');
   if (!rootData) return null;
 
+  /** All cart-placement bars, sorted by minCartQuantity ascending */
   const cartBars: AnnouncementBar[] = (
     (rootData as any)?.layout?.announcementBars ?? []
-  ).filter((b: AnnouncementBar) => b.placement === 'cart' || b.placement === 'both');
+  )
+    .filter((b: AnnouncementBar) => b.placement === 'cart' || b.placement === 'both')
+    .sort((a: AnnouncementBar, b: AnnouncementBar) => a.minCartQuantity - b.minCartQuantity);
+
+  /** Pick the bar with the highest minCartQuantity that is still <= totalQuantity */
+  function activeBar(totalQty: number): AnnouncementBar | null {
+    const qualifying = cartBars.filter((b) => b.minCartQuantity <= totalQty);
+    return qualifying.length > 0 ? qualifying[qualifying.length - 1] : null;
+  }
 
   return (
     <Drawer open={isOpen} onClose={onClose} heading="Carrinho" openFrom="right">
       <div className="grid">
-        {cartBars.map((bar, i) => {
-          const isAbs = bar.link?.startsWith('http');
-          return (
-            <div
-              key={i}
-              style={{
-                backgroundColor: bar.bgColor ?? '#16a34a',
-                color: bar.textColor ?? '#fff',
-              }}
-              className="py-2.5 px-4"
-            >
-              {bar.link ? (
-                isAbs ? (
-                  <a href={bar.link} className="block hover:opacity-80 transition-opacity">
-                    <p className="text-xs font-medium text-center">{bar.message}</p>
-                  </a>
-                ) : (
-                  <Link to={bar.link} className="block hover:opacity-80 transition-opacity">
-                    <p className="text-xs font-medium text-center">{bar.message}</p>
-                  </Link>
-                )
-              ) : (
-                <p className="text-xs font-medium text-center">{bar.message}</p>
-              )}
-            </div>
-          );
-        })}
         <Suspense fallback={<CartLoading />}>
           <Await
             resolve={rootData?.cart}
@@ -205,7 +207,15 @@ function CartDrawer({isOpen, onClose}: {isOpen: boolean; onClose: () => void}) {
               </div>
             }
           >
-            {(cart) => <Cart layout="drawer" onClose={onClose} cart={cart} />}
+            {(cart) => {
+              const bar = cartBars.length > 0 ? activeBar(cart?.totalQuantity ?? 0) : null;
+              return (
+                <>
+                  {bar && <CartAnnouncementBar bar={bar} />}
+                  <Cart layout="drawer" onClose={onClose} cart={cart} />
+                </>
+              );
+            }}
           </Await>
         </Suspense>
       </div>

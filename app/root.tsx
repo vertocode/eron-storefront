@@ -256,6 +256,9 @@ export type AnnouncementBar = {
   bgColor?: string;
   textColor?: string;
   sortOrder: number;
+  /** For cart bars: show this bar only when totalQuantity >= minCartQuantity.
+   *  The bar with the highest qualifying minCartQuantity wins. */
+  minCartQuantity: number;
 };
 
 function parseAnnouncementBars(nodes: Array<{fields: Array<{key: string; value: string | null}>}>): AnnouncementBar[] {
@@ -270,6 +273,7 @@ function parseAnnouncementBars(nodes: Array<{fields: Array<{key: string; value: 
         bgColor: f.bg_color || undefined,
         textColor: f.text_color || undefined,
         sortOrder: parseInt(f.sort_order || '0', 10),
+        minCartQuantity: parseInt(f.min_cart_quantity || '0', 10),
       };
     })
     .filter((b) => b.active && b.message)
