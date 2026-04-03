@@ -378,18 +378,12 @@ function DesktopHeader({
   return (
     <header
       role="banner"
-      className={`${
-        isHome
-          ? 'bg-primary/80 dark:bg-contrast/60 text-contrast dark:text-primary shadow-darkHeader'
-          : 'bg-contrast/80 text-primary'
-      } ${
-        !isHome && y > 50 && ' shadow-lightHeader'
-      } hidden h-nav lg:flex items-center sticky transition duration-300 backdrop-blur-lg z-40 top-0 justify-between w-full leading-none gap-8 px-12 py-8`}
+      className={`bg-contrast/80 text-primary${y > 50 ? ' shadow-lightHeader' : ''} hidden h-nav lg:flex items-center sticky transition duration-300 backdrop-blur-lg z-40 top-0 justify-between w-full leading-none gap-8 px-12 py-8`}
     >
       <div className="flex gap-12">
         <Link className="flex items-center" to="/" prefetch="intent">
           <img
-            src={isHome ? LOGO_INVERSE : LOGO_NORMAL}
+            src={LOGO_NORMAL}
             alt="Eron Fit"
             className="h-8 w-auto object-contain"
           />
@@ -418,11 +412,7 @@ function DesktopHeader({
           className="flex items-center gap-2"
         >
           <Input
-            className={
-              isHome
-                ? 'focus:border-contrast/20 dark:focus:border-primary/20'
-                : 'focus:border-primary/20'
-            }
+            className="focus:border-primary/20"
             type="search"
             variant="minisearch"
             placeholder="Buscar"
@@ -436,7 +426,7 @@ function DesktopHeader({
           </button>
         </Form>
         <AccountLink className="relative flex items-center justify-center w-8 h-8 focus:ring-primary/5" />
-        <CartCount isHome={isHome} openCart={openCart} />
+        <CartCount isHome={false} openCart={openCart} />
       </div>
     </header>
   );
