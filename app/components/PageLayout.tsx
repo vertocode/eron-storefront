@@ -390,7 +390,7 @@ function DesktopHeader({
       role="banner"
       className={`bg-contrast/80 text-primary${y > 50 ? ' shadow-lightHeader' : ''} hidden h-nav lg:flex items-center sticky transition duration-300 backdrop-blur-lg z-40 top-0 justify-between w-full leading-none gap-8 px-12 py-8`}
     >
-      <div className="flex gap-12">
+      <div className="flex items-center gap-12">
         <Link className="flex items-center" to="/" prefetch="intent">
           <img
             src={LOGO_NORMAL}
@@ -398,7 +398,7 @@ function DesktopHeader({
             className="h-8 w-auto object-contain"
           />
         </Link>
-        <nav className="flex gap-8">
+        <nav className="flex items-center gap-8">
           {/* Top level menu items */}
           {(menu?.items || []).map((item) => (
             <Link

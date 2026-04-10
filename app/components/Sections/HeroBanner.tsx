@@ -26,11 +26,13 @@ export type HeroBannerProps = {
   height?: 'full' | 'half' | string;
   loading?: HTMLImageElement['loading'];
   spread?: Media | MediaImage;
+  spread_mobile?: Media | MediaImage;
   spreadSecondary?: Media | MediaImage;
   top?: boolean;
   text_color?: string;
   text_button_color?: string;
   button_color?: string;
+  show_gradient?: string;
 };
 
 export function HeroBanner({
@@ -42,12 +44,15 @@ export function HeroBanner({
   height,
   loading,
   spread,
+  spread_mobile,
   spreadSecondary,
   top,
   text_color,
   text_button_color,
   button_color,
+  show_gradient,
 }: HeroBannerProps) {
+  const hasGradient = show_gradient === 'true';
   const positionClasses = clsx(
     'absolute px-6 py-8 sm:px-8 md:px-12 max-w-[90%] sm:max-w-[80%] md:max-w-[60%] lg:max-w-[50%]',
     !text_color && 'text-contrast dark:text-primary',
@@ -79,12 +84,21 @@ export function HeroBanner({
       <div className="absolute inset-0 w-screen left-1/2 -translate-x-1/2 overflow-hidden -z-10">
         <div className="pointer-events-none content-stretch overflow-clip flex">
           {spread && (
-            <div className="flex-1">
+            <div className={clsx('flex-1', spread_mobile && 'hidden md:block')}>
               <SpreadMedia
                 sizes={
                   spreadSecondary ? '(min-width: 48em) 50vw, 100vw' : '100vw'
                 }
                 data={spread}
+                loading={loading}
+              />
+            </div>
+          )}
+          {spread_mobile && (
+            <div className="flex-1 md:hidden">
+              <SpreadMedia
+                sizes="100vw"
+                data={spread_mobile}
                 loading={loading}
               />
             </div>
@@ -99,7 +113,7 @@ export function HeroBanner({
             </div>
           )}
         </div>
-        <div className="absolute inset-0 bg-gradient-to-t from-primary/60 dark:from-contrast/60 to-transparent z-10" />
+        {hasGradient && <div className="absolute inset-0 bg-gradient-to-t from-primary/60 to-transparent z-10" />}
       </div>
       <div
         className={positionClasses}
