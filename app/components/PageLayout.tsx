@@ -32,6 +32,7 @@ import {
 import {useIsHydrated} from '~/hooks/useIsHydrated';
 import {useCartFetchers} from '~/hooks/useCartFetchers';
 import type {RootLoader, AnnouncementBar} from '~/root';
+import type {DiscountTier} from '~/lib/admin-inventory.server';
 
 type LayoutProps = {
   children: React.ReactNode;
@@ -178,26 +179,51 @@ function CartAnnouncementBar({bar}: {bar: AnnouncementBar}) {
   );
 }
 
+/** Builds the smart discount tier message for the cart drawer. */
+function discountTierMessage(totalQty: number, tiers: DiscountTier[]): {message: string; bg: string} | null {
+  if (!tiers.length) return null;
+
+  // Find current tier (highest minQuantity <= totalQty)
+  const currentTier = [...tiers].reverse().find((t) => totalQty >= t.minQuantity) ?? null;
+  // Find next tier (lowest minQuantity > totalQty)
+  const nextTier = tiers.find((t) => totalQty < t.minQuantity) ?? null;
+
+  if (!currentTier && nextTier) {
+    // Haven't reached any tier yet
+    const need = nextTier.minQuantity - totalQty;
+    return {
+      message: `✂️ Adicione mais ${need} ${need === 1 ? 'peça' : 'peças'} e ganhe ${Math.round(nextTier.percentage * 100)}% de desconto!`,
+      bg: '#16a34a',
+    };
+  }
+
+  if (currentTier && nextTier) {
+    // On a tier, show the next one
+    const need = nextTier.minQuantity - totalQty;
+    return {
+      message: `✅ ${Math.round(currentTier.percentage * 100)}% de desconto aplicado! Adicione mais ${need} ${need === 1 ? 'peça' : 'peças'} para ${Math.round(nextTier.percentage * 100)}% de desconto!`,
+      bg: '#15803d',
+    };
+  }
+
+  if (currentTier && !nextTier) {
+    // On the highest tier
+    return {
+      message: `🎉 ${Math.round(currentTier.percentage * 100)}% de desconto aplicado — você atingiu o desconto máximo!`,
+      bg: '#15803d',
+    };
+  }
+
+  return null;
+}
+
 function CartDrawer({isOpen, onClose}: {isOpen: boolean; onClose: () => void}) {
   const rootData = useRouteLoaderData<RootLoader>('root');
   if (!rootData) return null;
 
-  /** All cart-placement bars, sorted by minCartQuantity ascending */
-  const cartBars: AnnouncementBar[] = (
-    (rootData as any)?.layout?.announcementBars ?? []
-  )
-    .filter((b: AnnouncementBar) => b.placement === 'cart' || b.placement === 'both')
-    .sort((a: AnnouncementBar, b: AnnouncementBar) => a.minCartQuantity - b.minCartQuantity);
-
-  /** Pick the bar with the highest minCartQuantity that is still <= totalQuantity */
-  function activeBar(totalQty: number): AnnouncementBar | null {
-    const qualifying = cartBars.filter((b) => b.minCartQuantity <= totalQty);
-    return qualifying.length > 0 ? qualifying[qualifying.length - 1] : null;
-  }
-
   return (
     <Drawer open={isOpen} onClose={onClose} heading="Carrinho" openFrom="right">
-      <div className="grid">
+      <div className="grid grid-rows-[auto_1fr] h-[calc(100%-var(--height-nav))] overflow-hidden">
         <Suspense fallback={<CartLoading />}>
           <Await
             resolve={rootData?.cart}
@@ -207,15 +233,29 @@ function CartDrawer({isOpen, onClose}: {isOpen: boolean; onClose: () => void}) {
               </div>
             }
           >
-            {(cart) => {
-              const bar = cartBars.length > 0 ? activeBar(cart?.totalQuantity ?? 0) : null;
-              return (
-                <>
-                  {bar && <CartAnnouncementBar bar={bar} />}
-                  <Cart layout="drawer" onClose={onClose} cart={cart} />
-                </>
-              );
-            }}
+            {(cart) => (
+              <Suspense fallback={<Cart layout="drawer" onClose={onClose} cart={cart} />}>
+                <Await resolve={(rootData as any)?.discountTiers}>
+                  {(tiers: DiscountTier[]) => {
+                    const totalQty = cart?.totalQuantity ?? 0;
+                    const tierMsg = totalQty > 0 ? discountTierMessage(totalQty, tiers ?? []) : null;
+                    return (
+                      <>
+                        {tierMsg && (
+                          <div
+                            style={{backgroundColor: tierMsg.bg, color: '#fff'}}
+                            className="py-2.5 px-4 shrink-0"
+                          >
+                            <p className="text-xs font-medium text-center">{tierMsg.message}</p>
+                          </div>
+                        )}
+                        <Cart layout="drawer" onClose={onClose} cart={cart} />
+                      </>
+                    );
+                  }}
+                </Await>
+              </Suspense>
+            )}
           </Await>
         </Suspense>
       </div>

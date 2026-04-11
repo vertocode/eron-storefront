@@ -73,6 +73,70 @@ async function getAdminToken(env: AdminEnv): Promise<string> {
  * Returns Map<variantGid, quantityAvailable> at São Lourenço.
  * Returns empty Map on any error (graceful degradation).
  */
+export type DiscountTier = {
+  minQuantity: number;
+  percentage: number;
+  title: string;
+};
+
+/**
+ * Fetches automatic quantity-based discount tiers from the Admin API.
+ * Returns sorted array (ascending by minQuantity). Empty on error.
+ */
+export async function getDiscountTiers(env: AdminEnv): Promise<DiscountTier[]> {
+  try {
+    const {domain} = resolveEnv(env);
+    const token = await getAdminToken(env);
+    const query = `{
+      automaticDiscountNodes(first: 20) {
+        nodes {
+          automaticDiscount {
+            ... on DiscountAutomaticBasic {
+              title
+              status
+              minimumRequirement {
+                ... on DiscountMinimumQuantity { greaterThanOrEqualToQuantity }
+              }
+              customerGets {
+                value { ... on DiscountPercentage { percentage } }
+              }
+            }
+          }
+        }
+      }
+    }`;
+    const res = await fetch(
+      `https://${domain}/admin/api/${ADMIN_API_VERSION}/graphql.json`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Shopify-Access-Token': token,
+        },
+        body: JSON.stringify({query}),
+      },
+    );
+    if (!res.ok) return [];
+    const data = (await res.json()) as any;
+    const nodes = data.data?.automaticDiscountNodes?.nodes ?? [];
+    const tiers: DiscountTier[] = [];
+    for (const n of nodes) {
+      const d = n.automaticDiscount;
+      if (!d?.minimumRequirement?.greaterThanOrEqualToQuantity) continue;
+      if (!d?.customerGets?.value?.percentage) continue;
+      if (d.status && d.status !== 'ACTIVE') continue;
+      tiers.push({
+        minQuantity: parseInt(d.minimumRequirement.greaterThanOrEqualToQuantity, 10),
+        percentage: d.customerGets.value.percentage,
+        title: d.title ?? '',
+      });
+    }
+    return tiers.sort((a, b) => a.minQuantity - b.minQuantity);
+  } catch {
+    return [];
+  }
+}
+
 export async function getInventoryBySaoLourenco(
   env: AdminEnv,
   variantGids: string[],

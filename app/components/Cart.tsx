@@ -118,7 +118,7 @@ export function CartDetails({
     (cart.totalQuantity > 0 ||
       (cart.lines?.nodes || (cart.lines as any)?.edges || []).length > 0);
   const container = {
-    drawer: 'grid grid-cols-1 h-screen-no-nav grid-rows-[1fr_auto]',
+    drawer: 'grid grid-cols-1 grid-rows-[1fr_auto] overflow-hidden min-h-0',
     page: 'w-full pb-12 grid md:grid-cols-2 md:items-start gap-8 md:gap-8 lg:gap-12',
   };
 
@@ -239,7 +239,7 @@ function CartLines({
     y > 0 ? 'border-t' : '',
     layout === 'page'
       ? 'flex-grow md:translate-y-4'
-      : 'px-6 pb-6 sm-max:pt-2 overflow-auto transition md:px-12',
+      : 'px-6 pb-6 sm-max:pt-2 overflow-y-auto min-h-0 transition md:px-12',
   ]);
 
   return (
@@ -650,7 +650,7 @@ export function CartEmpty({
 
   return (
     <div ref={scrollRef} className={container[layout]} hidden={hidden}>
-      <section className="grid gap-6">
+      <section className="grid gap-6 pt-6">
         <Text format>
           Parece que você ainda não adicionou nada, vamos começar!
         </Text>

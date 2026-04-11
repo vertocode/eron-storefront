@@ -33,7 +33,7 @@ import {seoPayload} from '~/lib/seo.server';
 import styles from '~/styles/app.css?url';
 
 import {DEFAULT_LOCALE, parseMenu} from './lib/utils';
-import {getInventoryBySaoLourenco} from './lib/admin-inventory.server';
+import {getInventoryBySaoLourenco, getDiscountTiers, type DiscountTier} from './lib/admin-inventory.server';
 
 export type RootLoader = typeof loader;
 
@@ -163,6 +163,7 @@ function loadDeferredData({context}: LoaderFunctionArgs) {
   return {
     isLoggedIn: customerAccount.isLoggedIn(),
     cart: enrichedCart,
+    discountTiers: getDiscountTiers(env),
   };
 }
 

@@ -54,8 +54,8 @@ export function HeroBanner({
 }: HeroBannerProps) {
   const hasGradient = show_gradient === 'true';
   const positionClasses = clsx(
-    'absolute px-6 py-8 sm:px-8 md:px-12 max-w-[90%] sm:max-w-[80%] md:max-w-[60%] lg:max-w-[50%]',
-    !text_color && 'text-contrast dark:text-primary',
+    'absolute z-20 px-6 py-8 sm:px-8 md:px-12 max-w-[90%] sm:max-w-[80%] md:max-w-[60%] lg:max-w-[50%]',
+    !text_color && 'text-contrast',
     {
       'left-0 bottom-0':
         content_position === 'left-bottom' || !content_position,
