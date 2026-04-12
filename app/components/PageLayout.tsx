@@ -3,8 +3,6 @@ import {useParams, Form, Await, useRouteLoaderData} from '@remix-run/react';
 // Logo URLs — hosted on Shopify CDN
 const LOGO_NORMAL =
   'https://cdn.shopify.com/s/files/1/0800/2964/7069/files/logo-2-nobg.png?v=1766192249';
-const LOGO_INVERSE =
-  'https://cdn.shopify.com/s/files/1/0800/2964/7069/files/logo-inverse-3-removebg-preview.png?v=1766192097';
 import useWindowScroll from 'react-use/esm/useWindowScroll';
 import {Disclosure} from '@headlessui/react';
 import {Suspense, useEffect, useMemo, useState} from 'react';
@@ -582,13 +580,13 @@ function Footer({menu}: {menu?: EnhancedMenu}) {
       as="footer"
       role="contentinfo"
       className={`grid min-h-[25rem] items-start grid-flow-row w-full gap-6 py-8 px-6 md:px-8 lg:px-12 md:gap-8 lg:gap-12 grid-cols-1 md:grid-cols-2 lg:grid-cols-${itemsCount}
-        bg-primary dark:bg-contrast dark:text-primary text-contrast overflow-hidden`}
+        bg-contrast text-primary overflow-hidden`}
     >
       {/* Logo — spans full width above menu columns */}
       <div className={`md:col-span-2 lg:col-span-${itemsCount} pb-2`}>
         <Link to="/">
           <img
-            src={LOGO_INVERSE}
+            src={LOGO_NORMAL}
             alt="Eron Fit"
             className="h-10 w-auto object-contain"
           />
@@ -605,7 +603,7 @@ function Footer({menu}: {menu?: EnhancedMenu}) {
 }
 
 function FooterLink({item}: {item: ChildEnhancedMenuItem}) {
-  const className = 'text-contrast/60 dark:text-primary/60 hover:text-contrast dark:hover:text-primary transition-colors';
+  const className = 'text-primary/60 hover:text-primary transition-colors';
 
   if (item.to.startsWith('http')) {
     return (
@@ -635,7 +633,7 @@ function FooterSearch() {
         variant="minisearch"
         placeholder="Buscar..."
         name="q"
-        className="!block w-full focus:border-contrast/20 dark:focus:border-primary/20 !text-left"
+        className="!block w-full focus:border-primary/20 !text-left"
       />
       <button
         type="submit"

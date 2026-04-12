@@ -4,6 +4,7 @@
 
 /* Tokens */
 :root {
+  color-scheme: light only;
   --color-primary: 20 20 20; /* Text, buttons, etc. */
   --color-contrast: 250 250 249; /* Backgrounds, borders, etc. */
   --color-accent: 191 72 0; /* Labels like "On sale" */
