@@ -34,8 +34,10 @@ import {Skeleton} from '~/components/Skeleton';
 import {ProductSwimlane} from '~/components/ProductSwimlane';
 import {ProductGallery} from '~/components/ProductGallery';
 import {IconCaret, IconCheck, IconClose} from '~/components/Icon';
+import {ReviewSummary, ReviewsSection} from '~/components/ProductReviews';
 import {getExcerpt} from '~/lib/utils';
 import {seoPayload} from '~/lib/seo.server';
+import {parseProductReviews} from '~/lib/reviews';
 import type {Storefront} from '~/lib/type';
 import {routeHeaders} from '~/data/cache';
 import {MEDIA_FRAGMENT, PRODUCT_CARD_FRAGMENT} from '~/data/fragments';
@@ -142,6 +144,7 @@ export default function Product() {
   const {media, title, vendor, descriptionHtml, tags} = product;
   const {shippingPolicy, refundPolicy} = shop;
   const isDropshipping = tags?.includes('dropshipping');
+  const reviews = parseProductReviews((product as any).reviews);
 
   // Optimistically selects a variant with given available variant information
   const selectedVariant = useOptimisticVariant(
@@ -177,6 +180,7 @@ export default function Product() {
                     {vendor}
                   </Text>
                 )}
+                <ReviewSummary reviews={reviews} />
                 <Heading as="h1" className="whitespace-normal text-lg md:text-3xl">
                   {title}
                 </Heading>
@@ -248,6 +252,7 @@ export default function Product() {
           )}
         </Await>
       </Suspense>
+      <ReviewsSection reviews={reviews} />
       <Analytics.ProductView
         data={{
           products: [
@@ -718,6 +723,21 @@ const PRODUCT_FRAGMENT = `#graphql
     media(first: 7) {
       nodes {
         ...Media
+      }
+    }
+    reviews: metafield(namespace: "custom", key: "reviews") {
+      references(first: 50) {
+        nodes {
+          ... on Metaobject {
+            id
+            type
+            handle
+            fields {
+              key
+              value
+            }
+          }
+        }
       }
     }
   }
