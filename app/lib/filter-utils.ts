@@ -1,4 +1,79 @@
-import type {ProductFilter} from '@shopify/hydrogen/storefront-api-types';
+import type {Filter, ProductFilter} from '@shopify/hydrogen/storefront-api-types';
+
+const SIZE_ORDER = ['PP', 'P', 'M', 'G', 'GG', 'XG', 'XGG', '2GG', 'XXG'];
+
+const COR_LABEL = 'Cor';
+const TAMANHO_LABEL = 'Tamanho';
+
+export type ProductOptionsNode = {
+  options: Array<{name: string; values: string[]}>;
+};
+
+/**
+ * Build a Cor + Tamanho filter list from the product options of a collection,
+ * formatted to match the shape Shopify's Storefront API returns so SortFilter
+ * can render them with the existing markup. This lets us sidestep Shopify's
+ * Search & Discovery config entirely.
+ */
+export function buildCorTamanhoFilters(
+  products: ProductOptionsNode[],
+): Filter[] {
+  const colors = new Set<string>();
+  const sizes = new Set<string>();
+
+  for (const product of products) {
+    for (const opt of product.options ?? []) {
+      const name = opt.name?.trim().toLowerCase();
+      if (name === 'cor') opt.values.forEach((v) => v && colors.add(v));
+      else if (name === 'tamanho') opt.values.forEach((v) => v && sizes.add(v));
+    }
+  }
+
+  const filters: Filter[] = [];
+
+  if (sizes.size > 0) {
+    const sorted = [...sizes].sort((a, b) => {
+      const ai = SIZE_ORDER.indexOf(a.toUpperCase());
+      const bi = SIZE_ORDER.indexOf(b.toUpperCase());
+      if (ai !== -1 && bi !== -1) return ai - bi;
+      if (ai !== -1) return -1;
+      if (bi !== -1) return 1;
+      return a.localeCompare(b, 'pt-BR');
+    });
+    filters.push({
+      id: 'filter.v.option.tamanho',
+      label: TAMANHO_LABEL,
+      type: 'LIST' as Filter['type'],
+      values: sorted.map((value) => ({
+        id: `filter.v.option.tamanho.${value}`,
+        label: value,
+        count: 0,
+        input: JSON.stringify({
+          variantOption: {name: TAMANHO_LABEL, value},
+        }),
+      })),
+    });
+  }
+
+  if (colors.size > 0) {
+    const sorted = [...colors].sort((a, b) => a.localeCompare(b, 'pt-BR'));
+    filters.push({
+      id: 'filter.v.option.cor',
+      label: COR_LABEL,
+      type: 'LIST' as Filter['type'],
+      values: sorted.map((value) => ({
+        id: `filter.v.option.cor.${value}`,
+        label: value,
+        count: 0,
+        input: JSON.stringify({
+          variantOption: {name: COR_LABEL, value},
+        }),
+      })),
+    });
+  }
+
+  return filters;
+}
 
 export type VariantStockNode = {
   availableForSale: boolean;

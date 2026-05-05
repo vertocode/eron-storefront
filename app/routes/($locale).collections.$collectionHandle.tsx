@@ -30,7 +30,10 @@ import {seoPayload} from '~/lib/seo.server';
 import {FILTER_URL_PREFIX} from '~/components/SortFilter';
 import {getImageLoadingPriority} from '~/lib/const';
 import {parseAsCurrency} from '~/lib/utils';
-import {keepProductsWithMatchingInStockVariant} from '~/lib/filter-utils';
+import {
+  buildCorTamanhoFilters,
+  keepProductsWithMatchingInStockVariant,
+} from '~/lib/filter-utils';
 
 export const headers = routeHeaders;
 
@@ -80,6 +83,13 @@ export async function loader({params, request, context}: LoaderFunctionArgs) {
     throw new Response('collection', {status: 404});
   }
 
+  // Build our own Cor + Tamanho filter list from product options across the
+  // whole collection, replacing whatever Shopify's Search & Discovery returns.
+  const customFilters = buildCorTamanhoFilters(
+    (collection as any).filterOptions?.nodes ?? [],
+  );
+  collection.products.filters = customFilters;
+
   // Stock-aware variant filtering: when the user picks variantOption filters
   // (e.g. Tamanho M + G), keep only products that have an in-stock variant
   // matching the chosen size/color combo.
@@ -90,7 +100,7 @@ export async function loader({params, request, context}: LoaderFunctionArgs) {
 
   const seo = seoPayload.collection({collection, url: request.url});
 
-  const allFilterValues = collection.products.filters.flatMap(
+  const allFilterValues = customFilters.flatMap(
     (filter: Filter) => filter.values,
   );
 
@@ -354,6 +364,14 @@ const COLLECTION_QUERY = `#graphql
           hasNextPage
           endCursor
           startCursor
+        }
+      }
+      filterOptions: products(first: 250) {
+        nodes {
+          options {
+            name
+            values
+          }
         }
       }
     }

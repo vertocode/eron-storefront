@@ -151,6 +151,7 @@ export async function getInventoryBySaoLourenco(
           ... on ProductVariant {
             id
             inventoryItem {
+              tracked
               inventoryLevel(locationId: "${SAO_LOURENCO_GID}") {
                 quantities(names: ["available"]) {
                   name
@@ -179,6 +180,7 @@ export async function getInventoryBySaoLourenco(
         nodes?: Array<{
           id?: string;
           inventoryItem?: {
+            tracked?: boolean;
             inventoryLevel?: {
               quantities: Array<{name: string; quantity: number}>;
             };
@@ -189,6 +191,7 @@ export async function getInventoryBySaoLourenco(
     const result = new Map<string, number>();
     for (const node of data.data?.nodes ?? []) {
       if (!node?.id) continue;
+      if (node.inventoryItem?.tracked === false) continue;
       const qty = node.inventoryItem?.inventoryLevel?.quantities?.find(
         (q) => q.name === 'available',
       )?.quantity;
