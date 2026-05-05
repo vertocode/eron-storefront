@@ -22,6 +22,13 @@ import type {
 
 import type {ShopFragment} from 'storefrontapi.generated';
 
+const BRAND_NAME = 'Eron Fit';
+const BRAND_TAGLINE = 'Moda Fitness Feminina';
+const TITLE_TEMPLATE = `%s | ${BRAND_NAME}`;
+const DEFAULT_DESCRIPTION =
+  'Eron Fit é a sua loja de moda fitness feminina: leggings que não marcam, tops com sustentação, shorts, conjuntos e calças pensados para mulher real. Conforto, performance e estilo do treino à rotina, com frete para todo o Brasil.';
+const SOCIAL_HANDLE = '@eronfit';
+
 function root({
   shop,
   url,
@@ -29,11 +36,13 @@ function root({
   shop: ShopFragment;
   url: Request['url'];
 }): SeoConfig {
+  const description = truncate(shop?.description || DEFAULT_DESCRIPTION);
+  const origin = new URL(url).origin;
   return {
-    title: shop?.name,
-    titleTemplate: '%s | Hydrogen Demo Store',
-    description: truncate(shop?.description ?? ''),
-    handle: '@shopify',
+    title: shop?.name || BRAND_NAME,
+    titleTemplate: TITLE_TEMPLATE,
+    description,
+    handle: SOCIAL_HANDLE,
     url,
     robots: {
       noIndex: false,
@@ -42,19 +51,17 @@ function root({
     jsonLd: {
       '@context': 'https://schema.org',
       '@type': 'Organization',
-      name: shop.name,
-      logo: shop.brand?.logo?.image?.url,
+      name: shop?.name || BRAND_NAME,
+      description,
+      logo: shop?.brand?.logo?.image?.url,
       sameAs: [
-        'https://twitter.com/shopify',
-        'https://facebook.com/shopify',
-        'https://instagram.com/shopify',
-        'https://youtube.com/shopify',
-        'https://tiktok.com/@shopify',
+        'https://www.instagram.com/eronfit',
+        'https://www.tiktok.com/@eronfit',
       ],
-      url,
+      url: origin,
       potentialAction: {
         '@type': 'SearchAction',
-        target: `${url}search?q={search_term}`,
+        target: `${origin}/search?q={search_term}`,
         query: "required name='search_term'",
       },
     },
@@ -62,20 +69,38 @@ function root({
 }
 
 function home({url}: {url: Request['url']}): SeoConfig {
+  const title = `${BRAND_NAME} — ${BRAND_TAGLINE} | Leggings, Tops e Conjuntos`;
+  const description =
+    'Roupas de academia femininas com tecido tecnológico, modelagem que valoriza o corpo e caimento que não decepciona. Leggings, tops, shorts, calças e conjuntos prontos para o seu treino — e para a vida toda. Compre online no site oficial Eron Fit, com frete para todo o Brasil.';
+  const origin = new URL(url).origin;
   return {
-    title: 'Home',
-    titleTemplate: '%s | Hydrogen Demo Store',
-    description: 'The best place to buy snowboarding products',
+    title,
+    description,
     url,
     robots: {
       noIndex: false,
       noFollow: false,
     },
-    jsonLd: {
-      '@context': 'https://schema.org',
-      '@type': 'WebPage',
-      name: 'Home page',
-    },
+    jsonLd: [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'WebSite',
+        name: BRAND_NAME,
+        url: origin,
+        potentialAction: {
+          '@type': 'SearchAction',
+          target: `${origin}/search?q={search_term}`,
+          query: "required name='search_term'",
+        },
+      },
+      {
+        '@context': 'https://schema.org',
+        '@type': 'WebPage',
+        name: title,
+        description,
+        url,
+      },
+    ],
   };
 }
 
@@ -135,7 +160,7 @@ function productJsonLd({
         {
           '@type': 'ListItem',
           position: 1,
-          name: 'Products',
+          name: 'Produtos',
           item: `${origin}/products`,
         },
         {
@@ -150,7 +175,7 @@ function productJsonLd({
       '@type': 'Product',
       brand: {
         '@type': 'Brand',
-        name: product.vendor,
+        name: product.vendor || BRAND_NAME,
       },
       description,
       image: [selectedVariant?.image?.url ?? ''],
@@ -171,11 +196,15 @@ function product({
   selectedVariant: SelectedVariantRequiredFields;
   url: Request['url'];
 }): SeoConfig {
+  const baseDescription =
+    product?.seo?.description ?? product?.description ?? '';
   const description = truncate(
-    product?.seo?.description ?? product?.description ?? '',
+    baseDescription ||
+      `Compre ${product.title} na Eron Fit — moda fitness feminina com tecido de alta performance, modelagem que valoriza e caimento perfeito. Frete para todo o Brasil.`,
   );
   return {
     title: product?.seo?.title ?? product?.title,
+    titleTemplate: TITLE_TEMPLATE,
     description,
     url,
     media: selectedVariant?.image,
@@ -201,13 +230,13 @@ function collectionJsonLd({
   url: Request['url'];
   collection: CollectionRequiredFields;
 }): SeoConfig['jsonLd'] {
-  const siteUrl = new URL(url);
+  const origin = new URL(url).origin;
   const itemListElement: CollectionPage['mainEntity'] =
     collection.products.nodes.map((product, index) => {
       return {
         '@type': 'ListItem',
         position: index + 1,
-        url: `/products/${product.handle}`,
+        url: `${origin}/products/${product.handle}`,
       };
     });
 
@@ -219,8 +248,8 @@ function collectionJsonLd({
         {
           '@type': 'ListItem',
           position: 1,
-          name: 'Collections',
-          item: `${siteUrl.host}/collections`,
+          name: 'Coleções',
+          item: `${origin}/collections`,
         },
         {
           '@type': 'ListItem',
@@ -237,7 +266,7 @@ function collectionJsonLd({
         collection?.seo?.description ?? collection?.description ?? '',
       ),
       image: collection?.image?.url,
-      url: `/collections/${collection.handle}`,
+      url: `${origin}/collections/${collection.handle}`,
       mainEntity: {
         '@type': 'ItemList',
         itemListElement,
@@ -253,12 +282,17 @@ function collection({
   collection: CollectionRequiredFields;
   url: Request['url'];
 }): SeoConfig {
+  const title = collection?.seo?.title || collection?.title || 'Coleção';
+  const baseDescription =
+    collection?.seo?.description ?? collection?.description ?? '';
+  const description = truncate(
+    baseDescription ||
+      `Explore a coleção ${collection?.title || ''} na Eron Fit. Roupas fitness femininas com conforto, performance e estilo para o seu treino e a sua rotina. Frete para todo o Brasil.`,
+  );
   return {
-    title: collection?.seo?.title,
-    description: truncate(
-      collection?.seo?.description ?? collection?.description ?? '',
-    ),
-    titleTemplate: '%s | Collection',
+    title,
+    description,
+    titleTemplate: TITLE_TEMPLATE,
     url,
     media: {
       type: 'image',
@@ -282,12 +316,13 @@ function collectionsJsonLd({
   url: Request['url'];
   collections: CollectionListRequiredFields;
 }): SeoConfig['jsonLd'] {
+  const origin = new URL(url).origin;
   const itemListElement: CollectionPage['mainEntity'] = collections.nodes.map(
     (collection, index) => {
       return {
         '@type': 'ListItem',
         position: index + 1,
-        url: `/collections/${collection.handle}`,
+        url: `${origin}/collections/${collection.handle}`,
       };
     },
   );
@@ -295,8 +330,9 @@ function collectionsJsonLd({
   return {
     '@context': 'https://schema.org',
     '@type': 'CollectionPage',
-    name: 'Collections',
-    description: 'All collections',
+    name: 'Coleções',
+    description:
+      'Todas as coleções de moda fitness feminina da Eron Fit: leggings, tops, shorts, calças e conjuntos.',
     url,
     mainEntity: {
       '@type': 'ItemList',
@@ -313,9 +349,10 @@ function listCollections({
   url: Request['url'];
 }): SeoConfig {
   return {
-    title: 'Collections',
-    titleTemplate: '%s | Collections',
-    description: 'All hydrogen collections',
+    title: 'Coleções',
+    titleTemplate: TITLE_TEMPLATE,
+    description:
+      'Conheça todas as coleções da Eron Fit: leggings, tops, shorts, calças e conjuntos fitness femininos para você treinar com estilo e conforto. Frete para todo o Brasil.',
     url,
     jsonLd: collectionsJsonLd({collections, url}),
   };
@@ -338,8 +375,8 @@ function article({
 }): SeoConfig {
   return {
     title: article?.seo?.title ?? article?.title,
-    description: truncate(article?.seo?.description ?? ''),
-    titleTemplate: '%s | Journal',
+    description: truncate(article?.seo?.description ?? article?.excerpt ?? ''),
+    titleTemplate: TITLE_TEMPLATE,
     url,
     media: {
       type: 'image',
@@ -357,7 +394,7 @@ function article({
       description: truncate(
         article?.seo?.description || article?.excerpt || '',
       ),
-      headline: article?.seo?.title || '',
+      headline: article?.seo?.title || article?.title || '',
       image: article?.image?.url,
       url,
     },
@@ -372,9 +409,12 @@ function blog({
   url: Request['url'];
 }): SeoConfig {
   return {
-    title: blog?.seo?.title,
-    description: truncate(blog?.seo?.description || ''),
-    titleTemplate: '%s | Blog',
+    title: blog?.seo?.title || blog?.title,
+    description: truncate(
+      blog?.seo?.description ||
+        'Dicas, novidades e bastidores da Eron Fit — moda fitness feminina, treino, autocuidado e estilo de vida.',
+    ),
+    titleTemplate: TITLE_TEMPLATE,
     url,
     jsonLd: {
       '@context': 'https://schema.org',
@@ -396,12 +436,13 @@ function page({
   return {
     description: truncate(page?.seo?.description || ''),
     title: page?.seo?.title ?? page?.title,
-    titleTemplate: '%s | Page',
+    titleTemplate: TITLE_TEMPLATE,
     url,
     jsonLd: {
       '@context': 'https://schema.org',
       '@type': 'WebPage',
       name: page.title,
+      url,
     },
   };
 }
@@ -416,7 +457,7 @@ function policy({
   return {
     description: truncate(policy?.body ?? ''),
     title: policy?.title,
-    titleTemplate: '%s | Policy',
+    titleTemplate: TITLE_TEMPLATE,
     url,
   };
 }
@@ -440,9 +481,11 @@ function policies({
       };
     });
   return {
-    title: 'Policies',
-    titleTemplate: '%s | Policies',
-    description: 'Hydroge store policies',
+    title: 'Políticas',
+    titleTemplate: TITLE_TEMPLATE,
+    description:
+      'Políticas da Eron Fit: privacidade, trocas e devoluções, envio e termos de serviço. Compre com confiança.',
+    url,
     jsonLd: [
       {
         '@context': 'https://schema.org',
@@ -452,8 +495,8 @@ function policies({
       {
         '@context': 'https://schema.org',
         '@type': 'WebPage',
-        description: 'Hydrogen store policies',
-        name: 'Policies',
+        description: 'Políticas da Eron Fit.',
+        name: 'Políticas',
         url,
       },
     ],

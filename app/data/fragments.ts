@@ -44,6 +44,7 @@ export const PRODUCT_CARD_FRAGMENT = `#graphql
     publishedAt
     handle
     vendor
+    availableForSale
     images(first: 2) {
       nodes {
         url
@@ -56,7 +57,6 @@ export const PRODUCT_CARD_FRAGMENT = `#graphql
       nodes {
         id
         availableForSale
-        quantityAvailable
         image {
           url
           altText
@@ -79,6 +79,11 @@ export const PRODUCT_CARD_FRAGMENT = `#graphql
           handle
           title
         }
+      }
+    }
+    collections(first: 10) {
+      nodes {
+        handle
       }
     }
   }

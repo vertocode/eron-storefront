@@ -627,7 +627,6 @@ const PRODUCT_VARIANT_FRAGMENT = `#graphql
   fragment ProductVariant on ProductVariant {
     id
     availableForSale
-    quantityAvailable
     selectedOptions {
       name
       value
