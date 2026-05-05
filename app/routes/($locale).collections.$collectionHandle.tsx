@@ -30,6 +30,7 @@ import {seoPayload} from '~/lib/seo.server';
 import {FILTER_URL_PREFIX} from '~/components/SortFilter';
 import {getImageLoadingPriority} from '~/lib/const';
 import {parseAsCurrency} from '~/lib/utils';
+import {keepProductsWithMatchingInStockVariant} from '~/lib/filter-utils';
 
 export const headers = routeHeaders;
 
@@ -78,6 +79,14 @@ export async function loader({params, request, context}: LoaderFunctionArgs) {
   if (!collection) {
     throw new Response('collection', {status: 404});
   }
+
+  // Stock-aware variant filtering: when the user picks variantOption filters
+  // (e.g. Tamanho M + G), keep only products that have an in-stock variant
+  // matching the chosen size/color combo.
+  collection.products.nodes = keepProductsWithMatchingInStockVariant(
+    collection.products.nodes,
+    filters,
+  );
 
   const seo = seoPayload.collection({collection, url: request.url});
 
@@ -330,6 +339,15 @@ const COLLECTION_QUERY = `#graphql
         }
         nodes {
           ...ProductCard
+          variantStock: variants(first: 50) {
+            nodes {
+              availableForSale
+              selectedOptions {
+                name
+                value
+              }
+            }
+          }
         }
         pageInfo {
           hasPreviousPage

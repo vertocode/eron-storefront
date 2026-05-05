@@ -43,26 +43,34 @@ export function SortFilter({
   children,
   collections = [],
 }: Props) {
-  const [isOpen, setIsOpen] = useState(false);
+  // Mobile-only toggle. Desktop (md+) always shows the panel via CSS.
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
+
   return (
     <>
       <div className="flex items-center justify-between w-full">
         <button
-          onClick={() => setIsOpen(!isOpen)}
-          className={
-            'relative flex items-center justify-center w-8 h-8 focus:ring-primary/5'
-          }
+          onClick={() => setIsMobileOpen((v) => !v)}
+          className="md:hidden relative inline-flex items-center gap-2 px-3 h-9 rounded border border-primary/15 hover:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-colors"
+          aria-expanded={isMobileOpen}
+          aria-controls="plp-filters-panel"
         >
           <IconFilters />
+          <span className="text-sm font-medium">Filtros</span>
         </button>
+        <span className="hidden md:inline-flex items-center gap-2 px-3 h-9 text-sm font-medium text-primary/80">
+          <IconFilters />
+          Filtros
+        </span>
         <SortMenu />
       </div>
       <div className="flex flex-col flex-wrap md:flex-row">
         <div
-          className={`transition-all duration-200 ${
-            isOpen
-              ? 'opacity-100 min-w-full md:min-w-[240px] md:w-[240px] md:pr-8 max-h-full'
-              : 'opacity-0 md:min-w-[0px] md:w-[0px] pr-0 max-h-0 md:max-h-full'
+          id="plp-filters-panel"
+          className={`transition-all duration-200 overflow-hidden md:opacity-100 md:min-w-[240px] md:w-[240px] md:pr-8 md:max-h-full ${
+            isMobileOpen
+              ? 'opacity-100 min-w-full max-h-full'
+              : 'opacity-0 max-h-0 pr-0'
           }`}
         >
           <FiltersDrawer filters={filters} appliedFilters={appliedFilters} />
