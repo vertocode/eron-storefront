@@ -14,8 +14,10 @@ import type {
   ProductFilter,
 } from '@shopify/hydrogen/storefront-api-types';
 
+import clsx from 'clsx';
+
 import {Heading, Text} from '~/components/Text';
-import {IconFilters, IconCaret, IconXMark} from '~/components/Icon';
+import {IconFilters, IconCaret} from '~/components/Icon';
 
 export type AppliedFilter = {
   label: string;
@@ -88,62 +90,82 @@ export function FiltersDrawer({
   const [params] = useSearchParams();
   const location = useLocation();
 
+  const isOptionSelected = (
+    filter: Filter,
+    option: Filter['values'][0],
+  ): boolean => {
+    if (filter.type === 'PRICE_RANGE') return false;
+    let optionFilter: ProductFilter;
+    try {
+      optionFilter = JSON.parse(option.input as string) as ProductFilter;
+    } catch {
+      return false;
+    }
+    return appliedFilters.some(
+      (af) => JSON.stringify(af.filter) === JSON.stringify(optionFilter),
+    );
+  };
+
   const filterMarkup = (filter: Filter, option: Filter['values'][0]) => {
     switch (filter.type) {
-      case 'PRICE_RANGE':
+      case 'PRICE_RANGE': {
         const priceFilter = params.get(`${FILTER_URL_PREFIX}price`);
         const price = priceFilter
           ? (JSON.parse(priceFilter) as ProductFilter['price'])
           : undefined;
         const min = isNaN(Number(price?.min)) ? undefined : Number(price?.min);
         const max = isNaN(Number(price?.max)) ? undefined : Number(price?.max);
-
         return <PriceRangeFilter min={min} max={max} />;
-
-      default:
-        const to = getFilterLink(option.input as string, params, location);
+      }
+      default: {
+        const selected = isOptionSelected(filter, option);
+        const to = selected
+          ? getRemoveFilterLink(option.input as string, params, location)
+          : getFilterLink(option.input as string, params, location);
         return (
           <Link
-            className="focus:underline hover:underline"
             prefetch="intent"
             to={to}
+            aria-pressed={selected}
+            className={clsx(
+              'inline-flex items-center justify-center min-w-[2.5rem] px-3 h-9 rounded border text-sm transition-colors',
+              selected
+                ? 'bg-primary text-contrast border-primary'
+                : 'border-primary/15 hover:border-primary/50',
+            )}
           >
             {option.label}
           </Link>
         );
+      }
     }
   };
 
   return (
     <>
       <nav className="py-8">
-        {appliedFilters.length > 0 ? (
-          <div className="pb-8">
-            <AppliedFilters filters={appliedFilters} />
-          </div>
-        ) : null}
-
         <Heading as="h4" size="lead" className="pb-4">
           Filtrar Por
         </Heading>
         <div className="divide-y">
           {filters.map((filter: Filter) => (
-            <Disclosure as="div" key={filter.id} className="w-full">
+            <Disclosure
+              as="div"
+              key={filter.id}
+              className="w-full"
+              defaultOpen
+            >
               {({open}) => (
                 <>
                   <Disclosure.Button className="flex justify-between w-full py-4">
                     <Text size="lead">{filter.label}</Text>
                     <IconCaret direction={open ? 'up' : 'down'} />
                   </Disclosure.Button>
-                  <Disclosure.Panel key={filter.id}>
-                    <ul key={filter.id} className="py-2">
-                      {filter.values?.map((option) => {
-                        return (
-                          <li key={option.id} className="pb-4">
-                            {filterMarkup(filter, option)}
-                          </li>
-                        );
-                      })}
+                  <Disclosure.Panel>
+                    <ul className="pb-4 flex flex-wrap gap-2">
+                      {filter.values?.map((option) => (
+                        <li key={option.id}>{filterMarkup(filter, option)}</li>
+                      ))}
                     </ul>
                   </Disclosure.Panel>
                 </>
@@ -154,49 +176,6 @@ export function FiltersDrawer({
       </nav>
     </>
   );
-}
-
-function AppliedFilters({filters = []}: {filters: AppliedFilter[]}) {
-  const [params] = useSearchParams();
-  const location = useLocation();
-  return (
-    <>
-      <Heading as="h4" size="lead" className="pb-4">
-        Filtros aplicados
-      </Heading>
-      <div className="flex flex-wrap gap-2">
-        {filters.map((filter: AppliedFilter) => {
-          return (
-            <Link
-              to={getAppliedFilterLink(filter, params, location)}
-              className="flex px-2 border rounded-full gap"
-              key={`${filter.label}-${JSON.stringify(filter.filter)}`}
-            >
-              <span className="flex-grow">{filter.label}</span>
-              <span>
-                <IconXMark />
-              </span>
-            </Link>
-          );
-        })}
-      </div>
-    </>
-  );
-}
-
-function getAppliedFilterLink(
-  filter: AppliedFilter,
-  params: URLSearchParams,
-  location: Location,
-) {
-  const paramsClone = new URLSearchParams(params);
-  Object.entries(filter.filter).forEach(([key, value]) => {
-    const fullKey = FILTER_URL_PREFIX + key;
-    paramsClone.delete(fullKey, JSON.stringify(value));
-  });
-  paramsClone.delete('cursor');
-  paramsClone.delete('direction');
-  return `${location.pathname}?${paramsClone.toString()}`;
 }
 
 function getSortLink(
@@ -220,6 +199,24 @@ function getFilterLink(
   newParams.delete('cursor');
   newParams.delete('direction');
   return `${location.pathname}?${newParams.toString()}`;
+}
+
+function getRemoveFilterLink(
+  rawInput: string | ProductFilter,
+  params: URLSearchParams,
+  location: ReturnType<typeof useLocation>,
+) {
+  const input =
+    typeof rawInput === 'string'
+      ? (JSON.parse(rawInput) as ProductFilter)
+      : rawInput;
+  const paramsClone = new URLSearchParams(params);
+  Object.entries(input).forEach(([key, value]) => {
+    paramsClone.delete(`${FILTER_URL_PREFIX}${key}`, JSON.stringify(value));
+  });
+  paramsClone.delete('cursor');
+  paramsClone.delete('direction');
+  return `${location.pathname}?${paramsClone.toString()}`;
 }
 
 const PRICE_RANGE_FILTER_DEBOUNCE = 500;
