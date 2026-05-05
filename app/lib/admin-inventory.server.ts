@@ -21,13 +21,17 @@ interface AdminEnv {
   SHOPIFY_ADMIN_DOMAIN?: string;
 }
 
-function resolveEnv(env: AdminEnv) {
+export function resolveAdminEnv(env: AdminEnv) {
   return {
     clientId: env.SHOPIFY_ADMIN_CLIENT_ID || DEFAULT_CLIENT_ID,
     clientSecret: env.SHOPIFY_ADMIN_CLIENT_SECRET || DEFAULT_CLIENT_SECRET,
     domain: env.SHOPIFY_ADMIN_DOMAIN || DEFAULT_ADMIN_DOMAIN,
   };
 }
+
+const resolveEnv = resolveAdminEnv;
+
+export const ADMIN_GRAPHQL_API_VERSION = ADMIN_API_VERSION;
 
 async function fetchFreshToken(env: AdminEnv): Promise<string> {
   const {clientId, clientSecret, domain} = resolveEnv(env);
@@ -48,7 +52,7 @@ async function fetchFreshToken(env: AdminEnv): Promise<string> {
   return access_token;
 }
 
-async function getAdminToken(env: AdminEnv): Promise<string> {
+export async function getAdminToken(env: AdminEnv): Promise<string> {
   // Try the Oxygen/Cloudflare Cache API first
   try {
     const cache = await (caches as any).open('hydrogen');
