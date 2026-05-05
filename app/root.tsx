@@ -77,11 +77,6 @@ export const links: LinksFunction = () => {
     },
     {
       rel: 'icon',
-      type: 'image/png',
-      href: 'https://cdn.shopify.com/s/files/1/0800/2964/7069/files/logo-2-nobg.png?v=1766192249',
-    },
-    {
-      rel: 'icon',
       type: 'image/svg+xml',
       href: favicon,
     },
@@ -175,13 +170,22 @@ function Layout({children}: {children?: React.ReactNode}) {
   const nonce = useNonce();
   const data = useRouteLoaderData<typeof loader>('root');
   const locale = data?.selectedLocale ?? DEFAULT_LOCALE;
+  const htmlLang = `${locale.language.toLowerCase()}-${locale.country.toUpperCase()}`;
+  const ogLocale = `${locale.language.toLowerCase()}_${locale.country.toUpperCase()}`;
 
   return (
-    <html lang={locale.language}>
+    <html lang={htmlLang}>
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width,initial-scale=1" />
         <meta name="color-scheme" content="light only" />
+        <meta name="theme-color" content="#ffffff" />
+        <meta name="format-detection" content="telephone=no" />
+        <meta property="og:site_name" content="Eron Fit" />
+        <meta property="og:type" content="website" />
+        <meta property="og:locale" content={ogLocale} />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:site" content="@eronfit" />
         <meta name="msvalidate.01" content="A352E6A0AF9A652267361BBB572B8468" />
         <link rel="stylesheet" href={styles}></link>
         <Meta />

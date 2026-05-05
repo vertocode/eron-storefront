@@ -37,9 +37,13 @@ export function ProductCard({
   if (!firstVariant) return null;
   const {image, price, compareAtPrice} = firstVariant;
 
-  const isOutOfStock = !firstVariant.availableForSale;
+  const isOutOfStock = cardProduct.availableForSale === false;
+  const isFirstVariantOutOfStock = !firstVariant.availableForSale;
   const quantityAvailable = (firstVariant as any).quantityAvailable as number | null | undefined;
-  const isLowStock = !isOutOfStock && quantityAvailable != null && quantityAvailable > 0 && quantityAvailable < 5;
+  const isLowStock = !isOutOfStock && !isFirstVariantOutOfStock && quantityAvailable != null && quantityAvailable > 0 && quantityAvailable < 5;
+  const isPremium = (cardProduct.collections?.nodes ?? []).some(
+    (c) => c?.handle?.toLowerCase() === 'premium',
+  );
 
   const productImages = cardProduct.images?.nodes ?? [];
   const firstImage = productImages[0] ?? image;
@@ -87,6 +91,25 @@ export function ProductCard({
                 alt={secondImage.altText || `Imagem de ${product.title}`}
                 loading="lazy"
               />
+            )}
+            {/* Premium chip — top-left */}
+            {isPremium && (
+              <div className="absolute top-3 left-3 z-10 inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-amber-950 shadow-md ring-1 ring-amber-300/60">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  className="h-3 w-3"
+                  aria-hidden="true"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M10.868 2.884c-.321-.772-1.415-.772-1.736 0l-1.83 4.401-4.753.381c-.833.067-1.171 1.107-.536 1.651l3.62 3.102-1.106 4.637c-.194.813.691 1.456 1.405 1.02L10 15.591l4.069 2.485c.713.436 1.598-.207 1.404-1.02l-1.106-4.637 3.62-3.102c.635-.544.297-1.584-.536-1.65l-4.752-.382-1.831-4.401Z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+                Premium
+              </div>
             )}
             {/* Top-right label (Promoção / Novo) */}
             {cardLabel && (

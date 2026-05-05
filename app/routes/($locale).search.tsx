@@ -48,17 +48,24 @@ export async function loader({
 
   const shouldGetRecommendations = !searchTerm || products?.nodes?.length === 0;
 
+  const seoTitle = searchTerm
+    ? `Busca: "${searchTerm}"`
+    : 'Busca';
+  const seoDescription = searchTerm
+    ? `Resultados para "${searchTerm}" na Eron Fit. Encontre leggings, tops, shorts, calças e conjuntos fitness femininos com conforto e estilo.`
+    : 'Busque por leggings, tops, shorts, calças e conjuntos fitness femininos na Eron Fit. Frete para todo o Brasil.';
+
   const seo = seoPayload.collection({
     url: request.url,
     collection: {
       id: 'search',
-      title: 'Busca',
+      title: seoTitle,
       handle: 'search',
-      descriptionHtml: 'Resultados da busca',
-      description: 'Resultados da busca',
+      descriptionHtml: seoDescription,
+      description: seoDescription,
       seo: {
-        title: 'Busca',
-        description: `Exibindo ${products.nodes.length} resultados da busca para "${searchTerm}"`,
+        title: seoTitle,
+        description: seoDescription,
       },
       metafields: [],
       products,

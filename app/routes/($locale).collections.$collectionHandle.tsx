@@ -22,7 +22,6 @@ import invariant from 'tiny-invariant';
 
 import {PageHeader, Section, Text} from '~/components/Text';
 import {Grid} from '~/components/Grid';
-import {Button} from '~/components/Button';
 import {ProductCard} from '~/components/ProductCard';
 import {SortFilter, type SortParam, type AppliedFilter} from '~/components/SortFilter';
 import {PRODUCT_CARD_FRAGMENT} from '~/data/fragments';
@@ -36,7 +35,7 @@ export const headers = routeHeaders;
 
 export async function loader({params, request, context}: LoaderFunctionArgs) {
   const paginationVariables = getPaginationVariables(request, {
-    pageBy: 8,
+    pageBy: 20,
   });
   const {collectionHandle} = params;
   const locale = context.storefront.i18n;
@@ -170,18 +169,11 @@ export default function Collection() {
             {({
               nodes,
               isLoading,
-              PreviousLink,
-              NextLink,
               nextPageUrl,
               hasNextPage,
               state,
             }) => (
               <>
-                <div className="flex items-center justify-center mb-6">
-                  <Button as={PreviousLink} variant="secondary" width="full">
-                    {isLoading ? 'Carregando...' : 'Carregar anteriores'}
-                  </Button>
-                </div>
                 <ProductsLoadedOnScroll
                   nodes={nodes}
                   inView={inView}
@@ -189,16 +181,21 @@ export default function Collection() {
                   hasNextPage={hasNextPage}
                   state={state}
                 />
-                <div className="flex items-center justify-center mt-6">
-                  <Button
+                {hasNextPage && (
+                  <div
                     ref={ref}
-                    as={NextLink}
-                    variant="secondary"
-                    width="full"
+                    className="flex items-center justify-center mt-10 h-12"
+                    aria-hidden={!isLoading}
                   >
-                    {isLoading ? 'Carregando...' : 'Carregar mais produtos'}
-                  </Button>
-                </div>
+                    {isLoading && (
+                      <span
+                        className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-primary/20 border-t-primary"
+                        role="status"
+                        aria-label="Carregando mais produtos"
+                      />
+                    )}
+                  </div>
+                )}
               </>
             )}
           </Pagination>
@@ -263,8 +260,8 @@ function ProductsLoadedOnScroll({
   }
 
   const sortedNodes = [...nodes].sort((a: any, b: any) => {
-    const aOos = !a?.variants?.nodes?.[0]?.availableForSale;
-    const bOos = !b?.variants?.nodes?.[0]?.availableForSale;
+    const aOos = a?.availableForSale === false;
+    const bOos = b?.availableForSale === false;
     if (aOos === bOos) return 0;
     return aOos ? 1 : -1;
   });

@@ -1,9 +1,11 @@
+import {useEffect} from 'react';
 import {
   json,
   type MetaArgs,
   type LoaderFunctionArgs,
 } from '@shopify/remix-oxygen';
-import {useLoaderData} from '@remix-run/react';
+import {useLoaderData, useNavigate} from '@remix-run/react';
+import {useInView} from 'react-intersection-observer';
 import invariant from 'tiny-invariant';
 import {
   Pagination,
@@ -20,7 +22,7 @@ import {getImageLoadingPriority} from '~/lib/const';
 import {seoPayload} from '~/lib/seo.server';
 import {routeHeaders} from '~/data/cache';
 
-const PAGE_BY = 8;
+const PAGE_BY = 20;
 
 export const headers = routeHeaders;
 
@@ -40,17 +42,19 @@ export async function loader({
 
   invariant(data, 'No data returned from Shopify API');
 
+  const productsDescription =
+    'Todos os produtos Eron Fit em um só lugar: leggings, tops, shorts, calças e conjuntos fitness femininos com tecido tecnológico, modelagem que valoriza e caimento que não decepciona. Frete para todo o Brasil.';
   const seo = seoPayload.collection({
     url: request.url,
     collection: {
       id: 'all-products',
       title: 'Todos os Produtos',
       handle: 'products',
-      descriptionHtml: 'Todos os produtos da loja',
-      description: 'Todos os produtos da loja',
+      descriptionHtml: productsDescription,
+      description: productsDescription,
       seo: {
         title: 'Todos os Produtos',
-        description: 'Todos os produtos da loja',
+        description: productsDescription,
       },
       metafields: [],
       products: data.products,
@@ -76,33 +80,73 @@ export default function AllProducts() {
       <PageHeader heading="Todos os Produtos" variant="allCollections" />
       <Section>
         <Pagination connection={products}>
-          {({nodes, isLoading, NextLink, PreviousLink}) => {
-            const itemsMarkup = (nodes as ProductCardFragment[]).map((product, i) => (
-              <ProductCard
-                key={product.id}
-                product={product}
-                loading={getImageLoadingPriority(i)}
-              />
-            ));
-
-            return (
-              <>
-                <div className="flex items-center justify-center mt-6">
-                  <PreviousLink className="inline-block rounded font-medium text-center py-3 px-6 border border-primary/10 bg-contrast text-primary w-full">
-                    {isLoading ? 'Carregando...' : 'Anterior'}
-                  </PreviousLink>
-                </div>
-                <Grid data-test="product-grid">{itemsMarkup}</Grid>
-                <div className="flex items-center justify-center mt-6">
-                  <NextLink className="inline-block rounded font-medium text-center py-3 px-6 border border-primary/10 bg-contrast text-primary w-full">
-                    {isLoading ? 'Carregando...' : 'Próximo'}
-                  </NextLink>
-                </div>
-              </>
-            );
-          }}
+          {({nodes, isLoading, nextPageUrl, hasNextPage, state}) => (
+            <InfiniteProductGrid
+              nodes={nodes as ProductCardFragment[]}
+              isLoading={isLoading}
+              nextPageUrl={nextPageUrl}
+              hasNextPage={hasNextPage}
+              state={state}
+            />
+          )}
         </Pagination>
       </Section>
+    </>
+  );
+}
+
+function InfiniteProductGrid({
+  nodes,
+  isLoading,
+  nextPageUrl,
+  hasNextPage,
+  state,
+}: {
+  nodes: ProductCardFragment[];
+  isLoading: boolean;
+  nextPageUrl: string;
+  hasNextPage: boolean;
+  state: any;
+}) {
+  const {ref, inView} = useInView();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (inView && hasNextPage) {
+      navigate(nextPageUrl, {
+        replace: true,
+        preventScrollReset: true,
+        state,
+      });
+    }
+  }, [inView, hasNextPage, nextPageUrl, state, navigate]);
+
+  return (
+    <>
+      <Grid data-test="product-grid">
+        {nodes.map((product, i) => (
+          <ProductCard
+            key={product.id}
+            product={product}
+            loading={getImageLoadingPriority(i)}
+          />
+        ))}
+      </Grid>
+      {hasNextPage && (
+        <div
+          ref={ref}
+          className="flex items-center justify-center mt-10 h-12"
+          aria-hidden={!isLoading}
+        >
+          {isLoading && (
+            <span
+              className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-primary/20 border-t-primary"
+              role="status"
+              aria-label="Carregando mais produtos"
+            />
+          )}
+        </div>
+      )}
     </>
   );
 }

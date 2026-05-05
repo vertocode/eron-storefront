@@ -290,10 +290,10 @@ function MenuMobileNav({
   footerMenu?: EnhancedMenu;
   onClose: () => void;
 }) {
-  // Collect all sub-items from footer "Páginas" sections (items with children)
-  const pageLinks = (footerMenu?.items || [])
-    .filter((item) => item.items?.length > 0)
-    .flatMap((item) => item.items);
+  // Footer parent items that have sub-items become labeled sections (e.g. Páginas, Coleções)
+  const footerGroups = (footerMenu?.items || []).filter(
+    (item) => item.items?.length > 0,
+  );
 
   return (
     <nav className="grid gap-4 p-6 sm:gap-6 sm:px-12 sm:py-8">
@@ -315,34 +315,35 @@ function MenuMobileNav({
         </span>
       ))}
 
-      {/* Footer page links */}
-      {pageLinks.length > 0 && (
-        <>
-          <div className="border-t border-primary/10 pt-4 mt-2">
-            <Text as="p" size="fine" className="uppercase tracking-widest text-primary/40 mb-3">
-              Páginas
-            </Text>
-            {pageLinks.map((item) => (
-              <span key={item.id} className="block mb-3">
-                <Link
-                  to={item.to}
-                  target={item.target}
-                  onClick={onClose}
-                  className={({isActive}) =>
-                    isActive
-                      ? 'pb-1 border-b -mb-px text-primary/60'
-                      : 'pb-1 text-primary/60 hover:text-primary transition-colors'
-                  }
-                >
-                  <Text as="span" size="copy">
-                    {item.title}
-                  </Text>
-                </Link>
-              </span>
-            ))}
-          </div>
-        </>
-      )}
+      {/* Footer groups — each parent renders as its own labeled section */}
+      {footerGroups.map((group) => (
+        <div
+          key={group.id}
+          className="border-t border-primary/10 pt-4 mt-2"
+        >
+          <Text as="p" size="fine" className="uppercase tracking-widest text-primary/40 mb-3">
+            {group.title}
+          </Text>
+          {group.items.map((item: ChildEnhancedMenuItem) => (
+            <span key={item.id} className="block mb-3">
+              <Link
+                to={item.to}
+                target={item.target}
+                onClick={onClose}
+                className={({isActive}) =>
+                  isActive
+                    ? 'pb-1 border-b -mb-px text-primary/60'
+                    : 'pb-1 text-primary/60 hover:text-primary transition-colors'
+                }
+              >
+                <Text as="span" size="copy">
+                  {item.title}
+                </Text>
+              </Link>
+            </span>
+          ))}
+        </div>
+      ))}
     </nav>
   );
 }
