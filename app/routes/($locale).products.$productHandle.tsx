@@ -139,8 +139,9 @@ export const meta = ({matches}: MetaArgs<typeof loader>) => {
 export default function Product() {
   const {product, shop, recommended, variants, storeDomain, variantInventory} =
     useLoaderData<typeof loader>();
-  const {media, title, vendor, descriptionHtml} = product;
+  const {media, title, vendor, descriptionHtml, tags} = product;
   const {shippingPolicy, refundPolicy} = shop;
+  const isDropshipping = tags?.includes('dropshipping');
 
   // Optimistically selects a variant with given available variant information
   const selectedVariant = useOptimisticVariant(
@@ -182,6 +183,18 @@ export default function Product() {
                 {/* Price display */}
                 <ProductPrice selectedVariant={selectedVariant} />
               </div>
+
+              {isDropshipping && (
+                <div className="flex items-start gap-3 p-3 rounded-lg bg-blue-50 border border-blue-200 text-blue-900 text-sm">
+                  <span className="text-base leading-none mt-0.5">📦</span>
+                  <div className="leading-snug">
+                    <p className="font-semibold">Produto sob encomenda</p>
+                    <p className="text-blue-800/90">
+                      Este item não tem pronta entrega. Após a confirmação do pagamento, o prazo estimado de chegada é de <strong>15 a 25 dias úteis</strong>.
+                    </p>
+                  </div>
+                </div>
+              )}
 
               {/* Variant selector & add to cart */}
               <ProductForm
@@ -667,6 +680,7 @@ const PRODUCT_FRAGMENT = `#graphql
     handle
     descriptionHtml
     description
+    tags
     encodedVariantExistence
     encodedVariantAvailability
     options {
